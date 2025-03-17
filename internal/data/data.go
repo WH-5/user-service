@@ -1,6 +1,8 @@
 package data
 
 import (
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"user-service/internal/conf"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -8,17 +10,35 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewGreeterRepo)
+var ProviderSet = wire.NewSet(NewData, NewGreeterRepo, NewUserRepo)
 
 // Data .
 type Data struct {
-	// TODO wrapped database client
+	DB *gorm.DB
 }
 
 // NewData .
 func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
-	cleanup := func() {
-		log.NewHelper(logger).Info("closing the data resources")
+	// 不做其他数据库的适配了，只做pgsql
+	db, err := gorm.Open(postgres.Open(c.Database.Source), &gorm.Config{})
+	if err != nil {
+		return nil, nil, err
 	}
-	return &Data{}, cleanup, nil
+	MigrateDB(db)
+	cleanup := func() {
+		logHelper := log.NewHelper(logger)
+		logHelper.Info("closing the data resources")
+
+		sqlDB, err := db.DB()
+		if err != nil {
+			logHelper.Errorf("failed to get SQL DB: %v", err)
+			return
+		}
+
+		// 关闭数据库连接并检查错误
+		if err := sqlDB.Close(); err != nil {
+			logHelper.Errorf("failed to close SQL DB: %v", err)
+		}
+	}
+	return &Data{DB: db}, cleanup, nil
 }

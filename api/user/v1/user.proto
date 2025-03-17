@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package api.user.v1;
+
+option go_package = "user-service/api/user/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.user.v1";
+
+service User {
+	rpc CreateUser (CreateUserRequest) returns (CreateUserReply);
+
+}
+
+message CreateUserRequest {
+	string Name=1;
+}
+message CreateUserReply {
+	string msg=1;
+}
