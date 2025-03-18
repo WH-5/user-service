@@ -1,6 +1,7 @@
 package data
 
 import (
+	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"user-service/internal/conf"
@@ -15,6 +16,7 @@ var ProviderSet = wire.NewSet(NewData, NewGreeterRepo, NewUserRepo)
 // Data .
 type Data struct {
 	DB *gorm.DB
+	RD *redis.Client
 }
 
 // NewData .
@@ -24,7 +26,19 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	MigrateDB(db)
+	err = MigrateDB(db)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:         c.Redis.Addr,
+		Password:     c.Redis.Password,
+		DB:           int(c.Redis.Database),
+		DialTimeout:  c.Redis.DialTimeout.AsDuration(),
+		WriteTimeout: c.Redis.WriteTimeout.AsDuration(),
+		ReadTimeout:  c.Redis.ReadTimeout.AsDuration(),
+	})
 	cleanup := func() {
 		logHelper := log.NewHelper(logger)
 		logHelper.Info("closing the data resources")
@@ -39,6 +53,9 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 		if err := sqlDB.Close(); err != nil {
 			logHelper.Errorf("failed to close SQL DB: %v", err)
 		}
+		if err := rdb.Close(); err != nil {
+			logHelper.Errorf("failed to close Redis DB: %v", err)
+		}
 	}
-	return &Data{DB: db}, cleanup, nil
+	return &Data{DB: db, RD: rdb}, cleanup, nil
 }

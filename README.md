@@ -55,10 +55,11 @@
    - **收集数据**：
      - 记录用户的关键行为（如登录、资料修改）。
      - 关联设备 ID、IP 地址等信息，以进行风险评估。
-   - **异常检测**：
+   （- **异常检测**：
      - 通过行为模式分析检测异常，如短时间内多次创建账户。（创建账户限制为每设备每天 3 次）
    - **风控措施**：
-     - 限制异常用户的部分权限，如降低发送消息的频率。
+     - 如果连续发消息10条在10秒内，就禁止发消息2分钟（这个在聊天服务做限制）
+     ）这两个使用redis来实现
 
 ### 用户登录
 登录功能用于验证用户身份，支持以下方式：
@@ -95,20 +96,18 @@
 - `birthday` 格式为 YYYY-MM-DD，不可设置未来日期。
 - `location` 可选，支持用户填写国家或城市。
 - `website` 可选，但必须是有效的 URL 格式。
-- **日志记录**：所有更新操作都会记录日志，以便溯源。
 
 ---
 ### 数据库表设计
 
 为了支持用户服务的功能，数据库需要至少包含以下几个表：
 
-1. **users（用户表）**
+1. **user_account（用户表）**
    - `id` (BIGINT, 主键，自增)
    - `phone` (VARCHAR, 唯一，用户注册手机号)
    - `unique_id` (VARCHAR, 唯一，用户唯一 ID)
    - `password_hash` (VARCHAR, 存储加密后的密码)
-   - `failed_attempts` (INT, 记录连续失败的登录尝试次数)
-   - `locked_until` (TIMESTAMP NULL, 账户锁定到期时间, 仅在被锁定时有效)
+   - `failed_attempts` (INT, 记录失败的登录尝试次数)
    - `created_at` (TIMESTAMP, 记录创建时间)
    - `updated_at` (TIMESTAMP, 记录更新时间)
 
@@ -128,13 +127,7 @@
 4. **user_behavior_logs（用户行为日志表）**
    - `id` (BIGINT, 主键)
    - `user_id` (BIGINT, 外键，关联 `users.id`)
-   - `action` (VARCHAR, 用户执行的行为)
+   - `action` (VARCHAR, 用户执行的行为)0注册，1登录，2其他
    - `metadata` (JSON, 记录行为的相关数据)
    - `created_at` (TIMESTAMP)
 
-5. **message_limits（用户消息限制表）**
-   - `id` (BIGINT, 主键)
-   - `user_id` (BIGINT, 外键，关联 `users.id`)
-   - `device_id` (VARCHAR, 设备唯一标识符, 关联 `user_devices.device_id`)
-   - `message_count` (INT, 记录用户当日发送的消息数量)
-   - `last_reset` (TIMESTAMP, 记录计数器上次重置时间)
