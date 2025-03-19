@@ -1,10 +1,10 @@
 package server
 
 import (
-	v1 "user-service/api/helloworld/v1"
-	v2 "user-service/api/user/v1"
-	"user-service/internal/conf"
-	"user-service/internal/service"
+	v1 "github.com/WH-5/user-service/api/helloworld/v1"
+	v2 "github.com/WH-5/user-service/api/user/v1"
+	"github.com/WH-5/user-service/internal/conf"
+	"github.com/WH-5/user-service/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"

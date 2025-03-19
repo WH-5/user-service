@@ -1,10 +1,10 @@
 package data
 
 import (
+	"github.com/WH-5/user-service/internal/conf"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"user-service/internal/conf"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"

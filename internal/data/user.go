@@ -2,8 +2,8 @@ package data
 
 import (
 	"context"
+	"github.com/WH-5/user-service/internal/biz"
 	"github.com/go-kratos/kratos/v2/log"
-	"user-service/internal/biz"
 )
 
 type userRepo struct {

@@ -6,11 +6,11 @@
 package main
 
 import (
-	"user-service/internal/biz"
-	"user-service/internal/conf"
-	"user-service/internal/data"
-	"user-service/internal/server"
-	"user-service/internal/service"
+	"github.com/WH-5/user-service/internal/biz"
+	"github.com/WH-5/user-service/internal/conf"
+	"github.com/WH-5/user-service/internal/data"
+	"github.com/WH-5/user-service/internal/server"
+	"github.com/WH-5/user-service/internal/service"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"

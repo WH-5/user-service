@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"user-service/internal/biz"
+	"github.com/WH-5/user-service/internal/biz"
 
-	pb "user-service/api/user/v1"
+	pb "github.com/WH-5/user-service/api/user/v1"
 )
 
 type UserService struct {
