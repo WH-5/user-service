@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/WH-5/user-service/internal/conf"
 	"github.com/WH-5/user-service/internal/pkg"
 	"github.com/go-kratos/kratos/v2/log"
@@ -32,7 +33,7 @@ type UniqueIdReply struct {
 type UserRepo interface {
 	CheckPhone(ctx context.Context, phone string) (bool, error)
 	CheckDeviceId(ctx context.Context, deviceId string) (bool, error)
-	SaveAccount(ctx context.Context, phone, uniqueId, hashPwd string) error
+	SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, deviceId string) error
 	WriteLog(ctx context.Context) error
 }
 type UserUsecase struct {
@@ -42,7 +43,7 @@ type UserUsecase struct {
 }
 
 func NewUserUsecase(c *conf.Bizfig, repo UserRepo, logger log.Logger) *UserUsecase {
-	return &UserUsecase{repo: repo, log: log.NewHelper(logger)}
+	return &UserUsecase{repo: repo, log: log.NewHelper(logger), cf: c}
 }
 func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*RegisterReply, error) {
 	//1. 设备注册限制 每天每设备注册x个  repo到缓存中查询设备今天是否可以注册了
@@ -69,13 +70,17 @@ func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*Registe
 	//4. 加密密码，并储存 调用加密函数
 	hashPwd := pkg.HashPassword(req.Password)
 	//5. 存储账号信息repo,还要在缓存里加入这个设备今天注册过一次
-	err = uc.repo.SaveAccount(ctx, req.Phone, uniqueId, hashPwd)
+	err = uc.repo.SaveAccount(ctx, req.Phone, uniqueId, hashPwd, "")
 	if err != nil {
+		fmt.Println("Error during registration:", err)
 		return nil, err
 	}
 	//6. 记录注册日志 repo到数据库记录
 	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
-	return &RegisterReply{}, nil
+	return &RegisterReply{
+		UniqueId: uniqueId,
+		Msg:      "register successfully",
+	}, nil
 }
 func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, error) {
 	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)

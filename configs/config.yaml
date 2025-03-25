@@ -22,5 +22,5 @@ data:
 bizfig:
   JWT_SECRET_KEY: test
   JWT_SERVICE_KEY: test
-  default_unique_length: 18
+  default_unique_length: 6
 

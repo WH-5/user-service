@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-const pwdRex = "^[a-zA-Z0-9!@#$%^&*()\\-_=+.?]{8,32}$"
+const pwdRex = "^[a-zA-Z0-9!@#$%^&*()\\-_=+.?]{6,32}$"
 
 // PasswordIsValid 判断密码是否合法
 func PasswordIsValid(pwd string) bool {
