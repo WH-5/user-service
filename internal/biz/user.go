@@ -70,7 +70,7 @@ func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*Registe
 	//4. 加密密码，并储存 调用加密函数
 	hashPwd := pkg.HashPassword(req.Password)
 	//5. 存储账号信息repo,还要在缓存里加入这个设备今天注册过一次
-	err = uc.repo.SaveAccount(ctx, req.Phone, uniqueId, hashPwd, "")
+	err = uc.repo.SaveAccount(ctx, req.Phone, uniqueId, hashPwd, req.DeviceId)
 	if err != nil {
 		fmt.Println("Error during registration:", err)
 		return nil, err

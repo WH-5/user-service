@@ -54,12 +54,21 @@ func (u *userRepo) SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, de
 		return err
 	}
 	DI := "deviceId:" + deviceId
-	err := u.data.setKey(DI, "1", 0)
+	value, err := u.data.getValue(DI)
 	if err != nil {
 		return err
+	} else if value == "" {
+		//缓存中没有当前设备码
+		err = u.data.setKey(DI, "1", 0)
+		if err != nil {
+			return err
+		}
+		expiredAt := pkg.GetMidnightTimestamp()
+		err = u.data.RD.ExpireAt(ctx, DI, expiredAt).Err()
+	} else {
+		//缓存中有当前设备码，直接加一
+		u.data.RD.Incr(ctx, DI)
 	}
-	expiredAt := pkg.GetMidnightTimestamp()
-	err = u.data.RD.ExpireAt(ctx, DI, expiredAt).Err()
 	return nil
 }
 
