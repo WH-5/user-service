@@ -2,6 +2,7 @@ package server
 
 import (
 	v1 "github.com/WH-5/user-service/api/helloworld/v1"
+	v2 "github.com/WH-5/user-service/api/user/v1"
 	"github.com/WH-5/user-service/internal/conf"
 	"github.com/WH-5/user-service/internal/service"
 
@@ -11,8 +12,10 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, userService *service.UserService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
+		//http.ResponseEncoder(pkg.RespEncoder),
+		//统一http响应编码---没写好
 		http.Middleware(
 			recovery.Recovery(),
 		),
@@ -28,5 +31,6 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.L
 	}
 	srv := http.NewServer(opts...)
 	v1.RegisterGreeterHTTPServer(srv, greeter)
+	v2.RegisterUserHTTPServer(srv, userService)
 	return srv
 }

@@ -29,8 +29,14 @@ var (
 	id, _ = os.Hostname()
 )
 
+func getConfigPath() string {
+	if _, err := os.Stat("../../configs"); err == nil {
+		return "../../configs" // 适用于 kratos run
+	}
+	return "configs" // 适用于 go run main.go
+}
 func init() {
-	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
+	flag.StringVar(&flagconf, "conf", getConfigPath(), "config path, eg: -conf config.yaml")
 }
 
 func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
@@ -74,7 +80,7 @@ func main() {
 		panic(err)
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.Bizfig, logger)
 	if err != nil {
 		panic(err)
 	}

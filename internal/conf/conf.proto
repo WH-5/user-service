@@ -8,6 +8,7 @@ import "google/protobuf/duration.proto";
 message Bootstrap {
   Server server = 1;
   Data data = 2;
+  Bizfig bizfig=3;
 }
 
 message Server {
@@ -39,6 +40,16 @@ message Data {
     int32 database =5;
     string password=6;
   }
+  message Other{
+    int32 register_limit_everydevice_everyday=1;
+  }
   Database database = 1;
   Redis redis = 2;
+  Other other =3;
+}
+message Bizfig {
+    string JWT_SECRET_KEY=1;
+    string JWT_SERVICE_KEY=2;
+    int32 default_unique_length=3;
+
 }

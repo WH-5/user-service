@@ -17,6 +17,10 @@ var ProviderSet = wire.NewSet(NewData, NewGreeterRepo, NewUserRepo)
 type Data struct {
 	DB *gorm.DB
 	RD *redis.Client
+	OT Other
+}
+type Other struct {
+	RegisterLimit int32
 }
 
 // NewData .
@@ -57,5 +61,6 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 			logHelper.Errorf("failed to close Redis DB: %v", err)
 		}
 	}
-	return &Data{DB: db, RD: rdb}, cleanup, nil
+
+	return &Data{DB: db, RD: rdb, OT: Other{RegisterLimit: c.Other.GetRegisterLimitEverydeviceEveryday()}}, cleanup, nil
 }

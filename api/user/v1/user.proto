@@ -2,18 +2,89 @@ syntax = "proto3";
 
 package api.user.v1;
 
+import "google/api/annotations.proto";
+
 option go_package = "github.com/WH-5/user-service/api/user/v1;v1";
 option java_multiple_files = true;
 option java_package = "api.user.v1";
 
 service User {
-	rpc CreateUser (CreateUserRequest) returns (CreateUserReply);
-
+	rpc Register (RegisterRequest) returns (RegisterReply){
+		option (google.api.http) = {
+			post: "/user/register"
+			body: "*"
+		};
+	}
+	rpc Login (LoginRequest) returns (LoginReply){
+		option (google.api.http) = {
+			post: "/user/login"
+			body: "*"
+		};
+	}
+	rpc Profile (ProfileRequest) returns  (ProfileReply){
+		option (google.api.http) = {
+			post: "/user/profile"
+			body: "*"
+		};
+	}
+	rpc UpdateUniqueId (UniqueIdRequest) returns  (UniqueIdReply){
+		option (google.api.http) = {
+			post: "/user/unique"
+			body: "*"
+		};
+	}
 }
 
-message CreateUserRequest {
-	string Name=1;
+message RegisterRequest {
+	string phone=1;
+	string password=2;
+	string device_id=3;
+
 }
-message CreateUserReply {
+message RegisterReply {
 	string msg=1;
+	string unique_id=2;
+}
+
+message LoginRequest{
+	oneof identifier {
+		string phone = 1;
+		string unique_id = 2;
+	}
+	string password=3;
+}
+message LoginReply{
+	string token=2;
+	string msg=1;
+	string unique_id=3;
+	string phone=4;
+}
+
+message UserProfile {
+	optional string nickname = 1;    // 用户昵称
+	optional string bio = 3;         // 用户简介
+	optional int32 gender = 4;       // 性别，0：未知，1：男，2：女
+	optional string birthday = 5;    // 生日，格式 YYYY-MM-DD
+	optional string location = 6;    // 位置（国家/城市）
+	optional string website = 7;     // 个人网站
+}
+message ProfileRequest{
+	uint64 unique_id=1;
+	UserProfile user_profile=2;
+}
+message ProfileReply{
+	uint64 unique_id=1;
+	UserProfile user_profile=2;
+	string msg=3;
+}
+
+message UniqueIdRequest{
+	string unique_id=1;
+	string new_unique_id=2;
+	string phone=3;
+}
+message UniqueIdReply{
+	string msg=1;
+	string new_unique_id=2;
+	string phone=3;
 }

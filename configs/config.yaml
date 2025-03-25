@@ -7,12 +7,20 @@ server:
     timeout: 1s
 data:
   database:
-    driver: mysql
-    source: root:root@tcp(127.0.0.1:3306)/test?parseTime=True&loc=Local
+    driver: postgres
+    source: postgres://root:whwhwhwhwhwhwhwh12321wh@localhost:5432/user_service?sslmode=disable
   redis:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
     db: 0
-    password: 123456
-    dialTimeout: 5s
+    password: "123456"
+    dial_timeout: 5s
+  other:
+    register_limit_everydevice_everyday: 3
+
+bizfig:
+  JWT_SECRET_KEY: test
+  JWT_SERVICE_KEY: test
+  default_unique_length: 18
+

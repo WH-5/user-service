@@ -1,7 +1,8 @@
-// user-service – internal/data/model.go
+// Package data pgsql.go
 // Author: 王辉
 // Created: 2025-03-18 00:55
-// 每次启动前都要做一遍自动迁移，肯定会影响启动速度，以后可以做一下优化
+// 每次启动前都要做一遍自动迁移，会影响启动速度，以后可以做一下优化
+// 原定的五个表删减至3个表
 
 package data
 
@@ -33,12 +34,13 @@ type UserProfile struct {
 	Website  string     `gorm:"size:255"`          // 个人网站或社交媒体链接
 }
 
-// UserDevice 表示用户的设备信息
-type UserDevice struct {
-	gorm.Model
-	UserID   uint   `gorm:"not null"`          // 关联用户 ID
-	DeviceID string `gorm:"size:255;not null"` // 设备唯一标识符
-}
+//// UserDevice 表示用户的设备信息
+//type UserDevice struct {
+//	gorm.Model
+//	UserID   uint   `gorm:"not null"`          // 关联用户 ID
+//	DeviceID string `gorm:"size:255;not null"` // 设备唯一标识符
+//}
+//发现这个表没啥用，取消了
 
 // UserBehaviorLog 表示用户的行为日志
 type UserBehaviorLog struct {
@@ -51,7 +53,7 @@ type UserBehaviorLog struct {
 // MigrateDB 负责数据库迁移
 func MigrateDB(db *gorm.DB) error {
 	// 执行自动迁移
-	err := db.AutoMigrate(&UserAccount{}, &UserProfile{}, &UserDevice{}, &UserBehaviorLog{})
+	err := db.AutoMigrate(&UserAccount{}, &UserProfile{}, &UserBehaviorLog{})
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
@@ -77,8 +79,8 @@ func addFieldComments(db *gorm.DB) error {
 		"COMMENT ON COLUMN user_profiles.birthday IS '生日，格式为 YYYY-MM-DD'",
 		"COMMENT ON COLUMN user_profiles.location IS '用户位置，如国家/城市信息'",
 		"COMMENT ON COLUMN user_profiles.website IS '个人网站或社交媒体链接'",
-		"COMMENT ON COLUMN user_devices.user_id IS '关联用户 ID'",
-		"COMMENT ON COLUMN user_devices.device_id IS '设备唯一标识符'",
+		//"COMMENT ON COLUMN user_devices.user_id IS '关联用户 ID'",
+		//"COMMENT ON COLUMN user_devices.device_id IS '设备唯一标识符'",
 		"COMMENT ON COLUMN user_behavior_logs.user_id IS '关联用户 ID'",
 		"COMMENT ON COLUMN user_behavior_logs.action IS '用户执行的行为 0注册、1登录、2其他'",
 		"COMMENT ON COLUMN user_behavior_logs.metadata IS '行为的相关数据'",
