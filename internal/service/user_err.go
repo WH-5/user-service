@@ -18,6 +18,7 @@ var (
 	// 特定的错误
 	UserDeviceIdEmptyError = errors.New(451, "USER_DEVICE_ID_EMPTY", "device id is empty")
 	UserPhoneInvalidError  = errors.New(451, "USER_PHONE_INVALID_EMPTY", "phone number is invalid")
+	UserPhoneORUniqueError = errors.New(451, "USER_PHONE_OR_UNIQUE_EMPTY", "phone number or unique is empty")
 
 	// 业务逻辑返回的错误
 	UserRegisterError = ErrStruct{code: 452, name: "USER_REGISTER_ERROR"}

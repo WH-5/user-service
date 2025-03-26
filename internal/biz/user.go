@@ -7,6 +7,7 @@ import (
 	"github.com/WH-5/user-service/internal/conf"
 	"github.com/WH-5/user-service/internal/pkg"
 	"github.com/go-kratos/kratos/v2/log"
+	"time"
 )
 
 type RegisterReq struct {
@@ -15,6 +16,9 @@ type RegisterReq struct {
 	DeviceId string
 }
 type LoginReq struct {
+	Phone    string
+	Unique   string
+	Password string
 }
 type ProfileReq struct {
 }
@@ -25,6 +29,10 @@ type RegisterReply struct {
 	UniqueId string
 }
 type LoginReply struct {
+	Token string
+	Msg   string
+	Field string
+	Value string
 }
 type ProfileReply struct {
 }
@@ -35,6 +43,9 @@ type UserRepo interface {
 	CheckDeviceId(ctx context.Context, deviceId string) (bool, error)
 	SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, deviceId string) error
 	WriteLog(ctx context.Context) error
+	VerifyUserAuth(ctx context.Context, field, account, password string) (bool, int64, error)
+	CanLogin(ctx context.Context, field, account string) (bool, int, error)
+	RecordLoginFailure(ctx context.Context, field, account string) (bool, error)
 }
 type UserUsecase struct {
 	repo UserRepo
@@ -76,16 +87,58 @@ func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*Registe
 		return nil, err
 	}
 	//6. 记录注册日志 repo到数据库记录
-	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
+	//TODO 记录到数据库
+	uc.log.WithContext(ctx).Infof("Register: %v", req.Phone)
 	return &RegisterReply{
 		UniqueId: uniqueId,
 		Msg:      "register successfully",
 	}, nil
 }
 func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, error) {
-	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
+	var field, value string
 
-	return &LoginReply{}, nil
+	if req.Phone != "" {
+		field = "phone"
+		value = req.Phone
+	} else if req.Unique != "" {
+		field = "unique_id"
+		value = req.Unique
+	}
+	//检查是否允许登录
+	can, t, err := uc.repo.CanLogin(ctx, field, value)
+	//t是数据层返回的限制登录时间
+	if err != nil {
+		return nil, err
+	}
+	if !can {
+		return nil, errors.New(fmt.Sprintf("login again after %d minutes", t))
+	}
+	//验证账号密码是否正确,如果正确，返回用户id
+	isAuth, userId, err := uc.repo.VerifyUserAuth(ctx, field, value, req.Password)
+	if err != nil {
+		return nil, err
+	}
+	if !isAuth {
+		//记录登录失败 存到数据库和缓存 连续失败x次，限制登录x分钟
+		state, err := uc.repo.RecordLoginFailure(ctx, field, value)
+		if err != nil || !state {
+			//输出到日志
+			uc.log.WithContext(ctx).Errorf("login failed record failed, state: %v, err: %v", state, err)
+		}
+		uc.log.WithContext(ctx).Errorf("login failed : %v[%v]", field, value)
+		return nil, errors.New("login failed")
+	}
+
+	duration := time.Duration(uc.cf.JWT_EXPIRED_HOUR) * time.Hour
+	//生成jwt token
+	token, err := pkg.GenJwtToken(userId, duration, uc.cf.JWT_SECRET_KEY)
+	if err != nil {
+		return nil, err
+	}
+	//记录登录日志
+	uc.log.WithContext(ctx).Infof("Login: %v[%v]", field, value)
+
+	return &LoginReply{Token: token, Msg: "Login successfully", Field: field, Value: value}, nil
 }
 func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileReply, error) {
 	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)

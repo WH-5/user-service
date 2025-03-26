@@ -42,6 +42,8 @@ message Data {
   }
   message Other{
     int32 register_limit_everydevice_everyday=1;
+    int32 max_failed_login_attempts=2;
+    int32 account_lock_duration_minutes=3;
   }
   Database database = 1;
   Redis redis = 2;
@@ -50,6 +52,7 @@ message Data {
 message Bizfig {
     string JWT_SECRET_KEY=1;
     string JWT_SERVICE_KEY=2;
+    int32  JWT_EXPIRED_HOUR=4;
     int32 default_unique_length=3;
 
 }

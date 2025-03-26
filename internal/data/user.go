@@ -2,15 +2,107 @@ package data
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/WH-5/user-service/internal/biz"
 	"github.com/WH-5/user-service/internal/pkg"
 	"github.com/go-kratos/kratos/v2/log"
+	"gorm.io/gorm"
+	"math"
 	"strconv"
+	"time"
 )
 
 type userRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (u *userRepo) VerifyUserAuth(ctx context.Context, field, account, password string) (bool, int64, error) {
+	//验证账号密码是否正确,如果正确，返回用户id
+	userId, err := u.findUserId(field, account)
+	if err != nil {
+		return false, 0, err
+	}
+	var hpwd string
+	result := u.data.DB.Model(&UserAccount{}).Select("password_hash").Where("id=?", userId).Scan(&hpwd)
+	if result.Error != nil {
+		return false, 0, result.Error
+	}
+	//验证密码
+	isMatch := pkg.CheckPassword(hpwd, password)
+	if !isMatch {
+		return false, 0, nil
+	}
+	return true, userId, nil
+}
+
+func (u *userRepo) CanLogin(ctx context.Context, field, account string) (bool, int, error) {
+	//检查是否允许登录 到缓存里查这个
+	userId, err := u.findUserId(field, account)
+	if err != nil {
+		return false, 0, err
+	}
+	value, err := u.data.getValue("userId:" + fmt.Sprintf("%d", userId))
+	if err != nil {
+		// 取报错
+		return false, 0, err
+	} else if value == "" {
+		//缓存里没有这个值
+		return true, 0, nil
+	}
+	va, err := strconv.Atoi(value)
+	if err != nil {
+		return false, 0, err
+	}
+	if int32(va) < u.data.OT.MaxFailedLoginAttempts {
+		return true, 0, nil
+	}
+	ttl := u.data.RD.TTL(ctx, "userId:"+fmt.Sprintf("%d", userId)).Val()
+	t := int(math.Ceil(ttl.Minutes()))
+	return false, t, nil
+}
+func (u *userRepo) findUserId(field, account string) (int64, error) {
+	//如果没找到，直接返回账号不存在
+	var userId int64
+	q := field + " = ?"
+	result := u.data.DB.Model(&UserAccount{}).Select("id").Where(q, account).Scan(&userId)
+	if result.Error != nil {
+		return -1, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return -1, errors.New(fmt.Sprintf("%s:%s not exist", field, account))
+	}
+	return userId, nil
+}
+
+func (u *userRepo) RecordLoginFailure(ctx context.Context, field, account string) (bool, error) {
+	//记录登录失败 存到数据库和缓存 连续失败x次，限制登录x分钟
+	userId, err := u.findUserId(field, account)
+	if err != nil {
+		return false, err
+	}
+	err = u.data.DB.Model(&UserAccount{}).Where("id = ?", userId).Update("failed_attempts", gorm.Expr("failed_attempts + ?", 1)).Error
+	if err != nil {
+		return false, err
+	}
+	UI := fmt.Sprintf("userId:%d", userId)
+	value, err := u.data.getValue(UI)
+	if err != nil {
+		return false, err
+	} else if value == "" {
+		//缓存中没有当前userId
+		duration := time.Duration(u.data.OT.AccountLockDurationMinutes) * time.Minute
+		err = u.data.setKey(UI, "1", duration)
+		if err != nil {
+			return false, err
+		}
+
+	} else {
+		//缓存中有当前设备码，直接加一
+		u.data.RD.Incr(ctx, UI)
+	}
+	return true, nil
 }
 
 func (u *userRepo) CheckPhone(ctx context.Context, phone string) (bool, error) {

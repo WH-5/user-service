@@ -27,7 +27,7 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterRequest) (*p
 		return nil, UserPhoneInvalidError
 	}
 	//1. 手机号校验：格式（app和服务端双校验）、未注册
-	//格式在api层校验，是否注册在biz层
+	//格式在api层校验，是否注册在biz层校验
 	//2. 唯一id生成
 	//3. 加密密码，并储存
 	//4. 设备注册限制 每天每设备注册x个
@@ -42,7 +42,25 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterRequest) (*p
 	return &pb.RegisterReply{Msg: registerReply.Msg, UniqueId: registerReply.UniqueId}, nil
 }
 func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginReply, error) {
-	return &pb.LoginReply{}, nil
+	//1. 输入唯一id或手机号 客户端选择输入的类型 二选一
+	ui := req.GetUniqueId()
+	p := req.GetPhone()
+	//这两个字段最多一个有值
+	if ui == "" && p == "" {
+		//都没有就是传错了
+		return nil, UserPhoneORUniqueError
+	}
+
+	login, err := s.uc.Login(ctx, &biz.LoginReq{Phone: p, Unique: ui, Password: req.GetPassword()})
+	if err != nil {
+		//自定的错误处理方式
+		return nil, LoginError(err)
+	}
+	//2. 验证账号密码
+	//3. 生成jwt token
+	//4. 连续失败x次，限制登录x分钟
+	//5. 记录登录日志
+	return &pb.LoginReply{Token: login.Token, Msg: login.Msg, Field: login.Field, Value: login.Value}, nil
 }
 func (s *UserService) Profile(ctx context.Context, req *pb.ProfileRequest) (*pb.ProfileReply, error) {
 	return &pb.ProfileReply{}, nil

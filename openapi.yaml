@@ -106,9 +106,9 @@ components:
                     type: string
                 msg:
                     type: string
-                uniqueId:
+                field:
                     type: string
-                phone:
+                value:
                     type: string
         api.user.v1.LoginRequest:
             type: object

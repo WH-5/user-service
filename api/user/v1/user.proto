@@ -56,8 +56,8 @@ message LoginRequest{
 message LoginReply{
 	string token=2;
 	string msg=1;
-	string unique_id=3;
-	string phone=4;
+	string field=3;
+	string value=4;
 }
 
 message UserProfile {

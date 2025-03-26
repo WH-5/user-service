@@ -18,9 +18,13 @@ data:
     dial_timeout: 5s
   other:
     register_limit_everydevice_everyday: 3
+    max_failed_login_attempts: 5
+    account_lock_duration_minutes: 5
 
 bizfig:
   JWT_SECRET_KEY: test
   JWT_SERVICE_KEY: test
   default_unique_length: 6
+  JWT_EXPIRED_HOUR: 1
+
 
