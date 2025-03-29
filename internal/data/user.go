@@ -1,3 +1,10 @@
+// Package data user.go
+// Author: 王辉
+// Created: 2025-03-30 00:29
+// 缓存中键的前缀
+// deviceId:限制设备注册次数
+// userId:限制连续登录
+// uniqueUserId:限制修改uniqueId
 package data
 
 import (
@@ -16,6 +23,73 @@ import (
 type userRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (u *userRepo) RecordModifyUniqueIdOnRedis(ctx context.Context, uid string) error {
+
+	//存到缓存
+	k := "uniqueUserId:" + uid
+	err := u.data.setKey(k, "", 0)
+	if err != nil {
+		return err
+	}
+	expiredAt := pkg.GetMidnightTimestamp()
+	err = u.data.RD.ExpireAt(ctx, k, expiredAt).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CheckUniqueUpdate true为这个id可以更新
+func (u *userRepo) CheckUniqueUpdate(ctx context.Context, uniqueId string) (uint, error) {
+	//根据userid检查今天更新情况 没错就是能用
+
+	//获取userid
+	userId, err := u.findUserId("unique_id", uniqueId)
+	if err != nil {
+		return 0, err
+	}
+
+	//到缓存里查询
+	uid := strconv.FormatUint(uint64(userId), 10)
+	have, err := u.data.RD.Exists(ctx, "uniqueUserId:"+uid).Result()
+	if err != nil {
+		return 0, err
+	}
+	if have > 0 {
+		return 0, errors.New("unique id today has already been modified")
+	}
+	return userId, nil
+}
+
+// CheckUniqueValid true为这个id可以用
+func (u *userRepo) CheckUniqueValid(ctx context.Context, uniqueId string) (bool, error) {
+	//检查uniqueId格式 (3月30日更新了接口参数校验，基本不用校验了)
+	valid := pkg.CheckUniqueIdIsValid(uniqueId)
+	if !valid {
+		return false, errors.New("invalid uniqueId")
+	}
+	//检查uniqueId存在情况
+	var exist bool
+	err := u.data.DB.Model(&UserAccount{}).Where("unique_id=?", uniqueId).Scan(&exist).Error
+	if err != nil {
+		return false, err
+	}
+	return !exist, nil
+}
+
+func (u *userRepo) UpdateUniqueId(ctx context.Context, uniqueId, newUniqueId string) error {
+
+	//修改数据库的unique ID
+	result := u.data.DB.Model(&UserAccount{}).Where("unique_id=?", uniqueId).Update("unique_id", newUniqueId)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("系统不崩遇不到这个错")
+	}
+	return nil
 }
 
 func (u *userRepo) UpdateProfile(ctx context.Context, uniqueId string, profileMap map[string]any) error {
@@ -194,10 +268,11 @@ func (u *userRepo) SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, de
 	if err != nil {
 		return err
 	}
-	//TODO 还需要初始化profile
+
 	up := &UserProfile{
 		UserID:   uid,
 		Nickname: uniqueId,
+		Location: "中国/内蒙古",
 	}
 	err = u.data.DB.Model(&UserProfile{}).Create(up).Error
 	if err != nil {

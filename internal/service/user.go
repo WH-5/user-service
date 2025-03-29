@@ -1,3 +1,8 @@
+// Package service user.go
+// Author: 王辉
+// Created: 2025-03-29 23:38
+//这个文件是user的接口层  函数返回错误必须返回我封装过的错误📦
+
 package service
 
 import (
@@ -101,7 +106,7 @@ func (s *UserService) Profile(ctx context.Context, req *pb.ProfileRequest) (*pb.
 		Profile:  p,
 	})
 	if err != nil {
-		return nil, err
+		return nil, ProfileError(err)
 	}
 	//1. 输入唯一id
 	//2. 传入要修改的字段
@@ -123,9 +128,15 @@ func (s *UserService) UpdateUniqueId(ctx context.Context, req *pb.UniqueIdReques
 
 	//2. 每天只能修改一次
 	//3. 验证 合法 和有无重复的
-	//s.UC.Password(ctx)
+	updateResult, err := s.UC.UpdateUniqueId(ctx, &biz.UniqueIdReq{
+		UniqueId:    req.GetUniqueId(),
+		NewUniqueId: req.GetNewUniqueId(),
+	})
+	if err != nil {
+		return nil, UniqueError(err)
+	}
 
-	return &pb.UniqueIdReply{}, nil
+	return &pb.UniqueIdReply{NewUniqueId: updateResult.NewUniqueId, Msg: updateResult.Msg}, nil
 }
 func (s *UserService) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb.GetProfileReply, error) {
 	return &pb.GetProfileReply{}, nil

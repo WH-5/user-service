@@ -55,14 +55,6 @@ generate:
 	go generate ./...
 	go mod tidy
 
-.PHONY: all
-# generate all
-all:
-	make api;
-	make config;
-	make generate;
-
-
 .PHONY: validate
 # generate validate proto
 validate:
@@ -71,6 +63,16 @@ validate:
            --go_out=paths=source_relative:. \
            --validate_out=paths=source_relative,lang=go:. \
            $(API_PROTO_FILES)
+
+.PHONY: all
+# generate all
+all:
+	make api;
+	make config;
+	make generate;
+	make validate;
+
+
 
 # show help
 help:

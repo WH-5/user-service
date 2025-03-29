@@ -57,10 +57,10 @@ func (m *UpdatePasswordRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetUniqueId()); l < 3 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetUniqueId()); l < 1 || l > 20 {
 		err := UpdatePasswordRequestValidationError{
 			field:  "UniqueId",
-			reason: "value length must be between 3 and 20 runes, inclusive",
+			reason: "value length must be between 1 and 20 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -71,7 +71,7 @@ func (m *UpdatePasswordRequest) validate(all bool) error {
 	if !_UpdatePasswordRequest_UniqueId_Pattern.MatchString(m.GetUniqueId()) {
 		err := UpdatePasswordRequestValidationError{
 			field:  "UniqueId",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{3,20}$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{1,20}$\"",
 		}
 		if !all {
 			return err
@@ -181,7 +181,7 @@ var _ interface {
 	ErrorName() string
 } = UpdatePasswordRequestValidationError{}
 
-var _UpdatePasswordRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{3,20}$")
+var _UpdatePasswordRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{1,20}$")
 
 var _UpdatePasswordRequest_OldPassword_Pattern = regexp.MustCompile("^[a-zA-Z0-9!@#$%^&*()\\-_=+.?]{6,32}$")
 
@@ -313,10 +313,10 @@ func (m *GetProfileRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetUniqueId()); l < 3 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetUniqueId()); l < 1 || l > 20 {
 		err := GetProfileRequestValidationError{
 			field:  "UniqueId",
-			reason: "value length must be between 3 and 20 runes, inclusive",
+			reason: "value length must be between 1 and 20 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -327,7 +327,7 @@ func (m *GetProfileRequest) validate(all bool) error {
 	if !_GetProfileRequest_UniqueId_Pattern.MatchString(m.GetUniqueId()) {
 		err := GetProfileRequestValidationError{
 			field:  "UniqueId",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{3,20}$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{1,20}$\"",
 		}
 		if !all {
 			return err
@@ -415,7 +415,7 @@ var _ interface {
 	ErrorName() string
 } = GetProfileRequestValidationError{}
 
-var _GetProfileRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{3,20}$")
+var _GetProfileRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{1,20}$")
 
 // Validate checks the field values on GetProfileReply with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -873,10 +873,10 @@ func (m *LoginRequest) validate(all bool) error {
 			errors = append(errors, err)
 		}
 
-		if l := utf8.RuneCountInString(m.GetUniqueId()); l < 3 || l > 20 {
+		if l := utf8.RuneCountInString(m.GetUniqueId()); l < 1 || l > 20 {
 			err := LoginRequestValidationError{
 				field:  "UniqueId",
-				reason: "value length must be between 3 and 20 runes, inclusive",
+				reason: "value length must be between 1 and 20 runes, inclusive",
 			}
 			if !all {
 				return err
@@ -887,7 +887,7 @@ func (m *LoginRequest) validate(all bool) error {
 		if !_LoginRequest_UniqueId_Pattern.MatchString(m.GetUniqueId()) {
 			err := LoginRequestValidationError{
 				field:  "UniqueId",
-				reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{3,20}$\"",
+				reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{1,20}$\"",
 			}
 			if !all {
 				return err
@@ -978,7 +978,7 @@ var _ interface {
 
 var _LoginRequest_Phone_Pattern = regexp.MustCompile("^1[3-9]\\d{9}$")
 
-var _LoginRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{3,20}$")
+var _LoginRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{1,20}$")
 
 var _LoginRequest_Password_Pattern = regexp.MustCompile("^[a-zA-Z0-9!@#$%^&*()\\-_=+.?]{6,32}$")
 
@@ -1290,10 +1290,10 @@ func (m *ProfileRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetUniqueId()); l < 3 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetUniqueId()); l < 1 || l > 20 {
 		err := ProfileRequestValidationError{
 			field:  "UniqueId",
-			reason: "value length must be between 3 and 20 runes, inclusive",
+			reason: "value length must be between 1 and 20 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1304,7 +1304,7 @@ func (m *ProfileRequest) validate(all bool) error {
 	if !_ProfileRequest_UniqueId_Pattern.MatchString(m.GetUniqueId()) {
 		err := ProfileRequestValidationError{
 			field:  "UniqueId",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{3,20}$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{1,20}$\"",
 		}
 		if !all {
 			return err
@@ -1419,7 +1419,7 @@ var _ interface {
 	ErrorName() string
 } = ProfileRequestValidationError{}
 
-var _ProfileRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{3,20}$")
+var _ProfileRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{1,20}$")
 
 // Validate checks the field values on ProfileReply with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -1546,10 +1546,10 @@ func (m *UniqueIdRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetUniqueId()); l < 3 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetUniqueId()); l < 1 || l > 20 {
 		err := UniqueIdRequestValidationError{
 			field:  "UniqueId",
-			reason: "value length must be between 3 and 20 runes, inclusive",
+			reason: "value length must be between 1 and 20 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1560,7 +1560,7 @@ func (m *UniqueIdRequest) validate(all bool) error {
 	if !_UniqueIdRequest_UniqueId_Pattern.MatchString(m.GetUniqueId()) {
 		err := UniqueIdRequestValidationError{
 			field:  "UniqueId",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{3,20}$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{1,20}$\"",
 		}
 		if !all {
 			return err
@@ -1568,10 +1568,10 @@ func (m *UniqueIdRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetNewUniqueId()); l < 3 || l > 20 {
+	if l := utf8.RuneCountInString(m.GetNewUniqueId()); l < 1 || l > 20 {
 		err := UniqueIdRequestValidationError{
 			field:  "NewUniqueId",
-			reason: "value length must be between 3 and 20 runes, inclusive",
+			reason: "value length must be between 1 and 20 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1582,18 +1582,7 @@ func (m *UniqueIdRequest) validate(all bool) error {
 	if !_UniqueIdRequest_NewUniqueId_Pattern.MatchString(m.GetNewUniqueId()) {
 		err := UniqueIdRequestValidationError{
 			field:  "NewUniqueId",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{3,20}$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_UniqueIdRequest_Phone_Pattern.MatchString(m.GetPhone()) {
-		err := UniqueIdRequestValidationError{
-			field:  "Phone",
-			reason: "value does not match regex pattern \"^1[3-9]\\\\d{9}$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]{1,20}$\"",
 		}
 		if !all {
 			return err
@@ -1679,11 +1668,9 @@ var _ interface {
 	ErrorName() string
 } = UniqueIdRequestValidationError{}
 
-var _UniqueIdRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{3,20}$")
+var _UniqueIdRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{1,20}$")
 
-var _UniqueIdRequest_NewUniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{3,20}$")
-
-var _UniqueIdRequest_Phone_Pattern = regexp.MustCompile("^1[3-9]\\d{9}$")
+var _UniqueIdRequest_NewUniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{1,20}$")
 
 // Validate checks the field values on UniqueIdReply with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -1710,8 +1697,6 @@ func (m *UniqueIdReply) validate(all bool) error {
 	// no validation rules for Msg
 
 	// no validation rules for NewUniqueId
-
-	// no validation rules for Phone
 
 	if len(errors) > 0 {
 		return UniqueIdReplyMultiError(errors)

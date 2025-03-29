@@ -201,16 +201,12 @@ components:
                     type: string
                 newUniqueId:
                     type: string
-                phone:
-                    type: string
         api.user.v1.UniqueIdRequest:
             type: object
             properties:
                 uniqueId:
                     type: string
                 newUniqueId:
-                    type: string
-                phone:
                     type: string
         api.user.v1.UpdatePasswordReply:
             type: object
@@ -225,8 +221,6 @@ components:
                 uniqueId:
                     type: string
                 oldPassword:
-                    type: string
-                newPassword:
                     type: string
         api.user.v1.UserProfile:
             type: object

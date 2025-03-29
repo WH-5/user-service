@@ -8,6 +8,7 @@ import (
 	"github.com/WH-5/user-service/internal/pkg"
 	"github.com/go-kratos/kratos/v2/log"
 	"reflect"
+	"strconv"
 	"time"
 )
 
@@ -35,6 +36,8 @@ type UProfile struct {
 }
 
 type UniqueIdReq struct {
+	UniqueId    string
+	NewUniqueId string
 }
 type RegisterReply struct {
 	Msg      string
@@ -51,6 +54,8 @@ type ProfileReply struct {
 	Msg      string
 }
 type UniqueIdReply struct {
+	NewUniqueId string
+	Msg         string
 }
 type GetProfileReq struct {
 	UniqueId string
@@ -72,6 +77,10 @@ type UserRepo interface {
 	RecordLoginFailure(ctx context.Context, field, account string) (bool, error)
 	CheckUser(ctx context.Context, field, account string) (bool, error)
 	UpdateProfile(ctx context.Context, uniqueId string, profileMap map[string]any) error
+	CheckUniqueUpdate(ctx context.Context, uniqueId string) (uint, error)
+	CheckUniqueValid(ctx context.Context, uniqueId string) (bool, error)
+	UpdateUniqueId(ctx context.Context, uniqueId, newUniqueId string) error
+	RecordModifyUniqueIdOnRedis(ctx context.Context, uid string) error
 }
 type UserUsecase struct {
 	repo UserRepo
@@ -209,10 +218,33 @@ func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileRe
 	return &ProfileReply{UniqueId: req.UniqueId, Msg: msg[:len(msg)-1]}, nil
 }
 func (uc *UserUsecase) UpdateUniqueId(ctx context.Context, req *UniqueIdReq) (*UniqueIdReply, error) {
-	//每天只能修改一次
-	//验证合法 和有无重复的
+	//判断今天修改过没有
+	uid, err := uc.repo.CheckUniqueUpdate(ctx, req.UniqueId)
+	if err != nil {
+		return nil, err
+	}
+
+	//验证合法 及无重复
+	valid, err := uc.repo.CheckUniqueValid(ctx, req.NewUniqueId)
+	if err != nil {
+		return nil, err
+	}
+	if !valid {
+		return nil, errors.New("unique has already been used")
+	}
+	//修改 记录今天修改过
+	err = uc.repo.UpdateUniqueId(ctx, req.UniqueId, req.NewUniqueId)
+	if err != nil {
+		return nil, err
+	}
+	m := "modification successful"
+	id := strconv.FormatUint(uint64(uid), 10)
+	err = uc.repo.RecordModifyUniqueIdOnRedis(ctx, id)
+	if err != nil {
+		m += " but save failed"
+	}
 	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
-	return &UniqueIdReply{}, nil
+	return &UniqueIdReply{NewUniqueId: req.NewUniqueId, Msg: m}, nil
 }
 func (uc *UserUsecase) GetProfile(ctx context.Context, req *GetProfileReq) (*GetProfileReply, error) {
 
