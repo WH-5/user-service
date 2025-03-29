@@ -18,6 +18,35 @@ type userRepo struct {
 	log  *log.Helper
 }
 
+func (u *userRepo) UpdateProfile(ctx context.Context, uniqueId string, profileMap map[string]any) error {
+
+	userId, err := u.findUserId("unique_id", uniqueId)
+	if err != nil {
+		return err
+	}
+	result := u.data.DB.Model(&UserProfile{}).Where("user_id = ?", userId).Updates(profileMap)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (u *userRepo) CheckUser(ctx context.Context, field, account string) (bool, error) {
+	uidValue := ctx.Value("user_id")
+	uid, ok := uidValue.(float64)
+	if !ok {
+		return false, errors.New("invalid or missing user_id in context")
+	}
+	userId, err := u.findUserId(field, account)
+	if err != nil {
+		return false, err
+	}
+	if userId == int64(uid) {
+		return true, nil
+	}
+	return false, nil
+}
+
 func (u *userRepo) VerifyUserAuth(ctx context.Context, field, account, password string) (bool, int64, error) {
 	//验证账号密码是否正确,如果正确，返回用户id
 	userId, err := u.findUserId(field, account)
@@ -161,6 +190,7 @@ func (u *userRepo) SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, de
 		//缓存中有当前设备码，直接加一
 		u.data.RD.Incr(ctx, DI)
 	}
+	//TODO 还需要初始化profile
 	return nil
 }
 

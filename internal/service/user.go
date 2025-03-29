@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	pb "github.com/WH-5/user-service/api/user/v1"
 	"github.com/WH-5/user-service/internal/biz"
 	"github.com/WH-5/user-service/internal/pkg"
@@ -9,11 +10,11 @@ import (
 
 type UserService struct {
 	pb.UnimplementedUserServer
-	uc *biz.UserUsecase
+	UC *biz.UserUsecase
 }
 
 func NewUserService(uc *biz.UserUsecase) *UserService {
-	return &UserService{uc: uc}
+	return &UserService{UC: uc}
 }
 
 // Register 注册
@@ -33,7 +34,7 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterRequest) (*p
 	//4. 设备注册限制 每天每设备注册x个
 	//5. 记录注册日志
 	//这些都放在业务逻辑层
-	registerReply, err := s.uc.Register(ctx, &biz.RegisterReq{Phone: req.Phone, Password: req.Password, DeviceId: req.DeviceId})
+	registerReply, err := s.UC.Register(ctx, &biz.RegisterReq{Phone: req.Phone, Password: req.Password, DeviceId: req.DeviceId})
 	//意外退出的错误处理，逻辑判断的错误放在msg里了
 	if err != nil {
 		return nil, RegisterError(err)
@@ -51,7 +52,7 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 		return nil, UserPhoneORUniqueError
 	}
 
-	login, err := s.uc.Login(ctx, &biz.LoginReq{Phone: p, Unique: ui, Password: req.GetPassword()})
+	login, err := s.UC.Login(ctx, &biz.LoginReq{Phone: p, Unique: ui, Password: req.GetPassword()})
 	if err != nil {
 		//自定的错误处理方式
 		return nil, LoginError(err)
@@ -63,7 +64,52 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	return &pb.LoginReply{Token: login.Token, Msg: login.Msg, Field: login.Field, Value: login.Value}, nil
 }
 func (s *UserService) Profile(ctx context.Context, req *pb.ProfileRequest) (*pb.ProfileReply, error) {
-	return &pb.ProfileReply{}, nil
+	//检查权限
+	field := "unique_id"
+	account := req.GetUniqueId()
+	have, err := s.UC.AuthCheckUser(ctx, field, account)
+	if err != nil {
+		return nil, ProfileError(err)
+	}
+	if !have {
+		return nil, UserNotAccountPermissionError
+	}
+	p := &biz.UProfile{
+		Nickname: req.UserProfile.GetNickname(),
+		Bio:      req.UserProfile.GetBio(),
+		Gender:   req.UserProfile.GetGender(),
+		Birthday: req.UserProfile.GetBirthday(),
+		Location: req.UserProfile.GetLocation(),
+		Other:    req.UserProfile.GetOther(),
+	}
+	fmt.Printf("%+v\n", p)
+	fmt.Printf("%+v\n", req.UserProfile.GetNickname())
+	////如果p获取的值全为零值
+	//if pkg.IsZeroValue(*p) {
+	//	return nil, UserProfileEmptyError
+	//}
+	if (*p == biz.UProfile{}) {
+		//不带括号过不了编译
+		return nil, UserProfileEmptyError
+	}
+	//if reflect.DeepEqual(*p, reflect.Zero(reflect.TypeOf(*p)).Interface()) {
+	//}
+	// if判断p全部为零值的s三种写法。各测试1000000*100次
+	//== 操作平均耗时: 5.040436ms
+	//reflect.DeepEqual 操作平均耗时: 74.898268ms
+	//pkg.IsZeroValue 操作平均耗时: 29.06546ms
+	profileRep, err := s.UC.Profile(ctx, &biz.ProfileReq{
+		UniqueId: req.GetUniqueId(),
+		Profile:  p,
+	})
+	if err != nil {
+		return nil, err
+	}
+	//1. 输入唯一id
+	//2. 传入要修改的字段
+	//3. 返回修改了的字段
+	//4. 记录日志
+	return &pb.ProfileReply{UniqueId: profileRep.UniqueId, Msg: ""}, nil
 }
 func (s *UserService) UpdateUniqueId(ctx context.Context, req *pb.UniqueIdRequest) (*pb.UniqueIdReply, error) {
 	return &pb.UniqueIdReply{}, nil

@@ -31,7 +31,7 @@ type UserProfile struct {
 	Gender   int        `gorm:"default:0"`         // 性别，0：未知，1：男，2：女
 	Birthday *time.Time `gorm:"default:NULL"`      // 生日，格式为 YYYY-MM-DD
 	Location string     `gorm:"size:100"`          // 用户位置，如国家/城市信息
-	Website  string     `gorm:"size:255"`          // 个人网站或社交媒体链接
+	Other    string     `gorm:"size:255"`          // 个人网站或社交媒体链接
 }
 
 //// UserDevice 表示用户的设备信息
@@ -78,7 +78,7 @@ func addFieldComments(db *gorm.DB) error {
 		"COMMENT ON COLUMN user_profiles.gender IS '性别，0：未知，1：男，2：女'",
 		"COMMENT ON COLUMN user_profiles.birthday IS '生日，格式为 YYYY-MM-DD'",
 		"COMMENT ON COLUMN user_profiles.location IS '用户位置，如国家/城市信息'",
-		"COMMENT ON COLUMN user_profiles.website IS '个人网站或社交媒体链接'",
+		"COMMENT ON COLUMN user_profiles.other IS '个人网站或社交媒体链接'",
 		//"COMMENT ON COLUMN user_devices.user_id IS '关联用户 ID'",
 		//"COMMENT ON COLUMN user_devices.device_id IS '设备唯一标识符'",
 		"COMMENT ON COLUMN user_behavior_logs.user_id IS '关联用户 ID'",

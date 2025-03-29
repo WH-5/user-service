@@ -61,21 +61,20 @@ message LoginReply{
 }
 
 message UserProfile {
-	optional string nickname = 1;    // 用户昵称
-	optional string bio = 3;         // 用户简介
-	optional int32 gender = 4;       // 性别，0：未知，1：男，2：女
-	optional string birthday = 5;    // 生日，格式 YYYY-MM-DD
-	optional string location = 6;    // 位置（国家/城市）
-	optional string website = 7;     // 个人网站
+	string nickname = 1;    // 用户昵称
+	string bio = 3;         // 用户简介
+	int32 gender = 4;       // 性别，0：未知，1：男，2：女
+	string birthday = 5;    // 生日，格式 YYYY-MM-DD
+	string location = 6;    // 位置（国家/城市）
+	string other = 7;
 }
 message ProfileRequest{
-	uint64 unique_id=1;
+	string unique_id=1;
 	UserProfile user_profile=2;
 }
 message ProfileReply{
-	uint64 unique_id=1;
-	UserProfile user_profile=2;
-	string msg=3;
+	string unique_id=1;
+	string msg=2;
 }
 
 message UniqueIdRequest{

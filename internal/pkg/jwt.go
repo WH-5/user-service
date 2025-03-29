@@ -30,7 +30,7 @@ func GenJwtToken(userID int64, duration time.Duration, key string) (string, erro
 }
 
 // ParseToken 解析 JWT，并检查是否过期，同时返回可读的过期时间
-func ParseToken(tokenString, key string) (*jwt.Token, string, error) {
+func ParseToken(tokenString, key string) (*jwt.Token, error) {
 
 	secretKey := []byte(key)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -42,29 +42,26 @@ func ParseToken(tokenString, key string) (*jwt.Token, string, error) {
 	})
 
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	// 获取 Claims（载荷）
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return nil, "", fmt.Errorf("token 无效")
+		return nil, fmt.Errorf("token 无效")
 	}
 
-	// 解析 exp 过期时间
-	var expTimeStr string
-	loc, _ := time.LoadLocation("Asia/Shanghai")
+	//loc, _ := time.LoadLocation("Asia/Shanghai")
 	if exp, ok := claims["exp"].(float64); ok {
 		expTime := time.Unix(int64(exp), 0)
-		expTime = expTime.In(loc)
-		expTimeStr = expTime.Format("2006-01-02 15:04:05") // 转换为可读时间格式
+		//expTime = expTime.In(loc)
 
 		if time.Now().After(expTime) {
-			return nil, expTimeStr, fmt.Errorf("token 已过期")
+			return nil, fmt.Errorf("token 已过期")
 		}
 	} else {
-		return nil, "", fmt.Errorf("token 缺少 exp 字段")
+		return nil, fmt.Errorf("token 缺少 exp 字段")
 	}
 
-	return token, expTimeStr, nil
+	return token, nil
 }

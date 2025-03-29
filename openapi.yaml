@@ -124,8 +124,6 @@ components:
             properties:
                 uniqueId:
                     type: string
-                userProfile:
-                    $ref: '#/components/schemas/api.user.v1.UserProfile'
                 msg:
                     type: string
         api.user.v1.ProfileRequest:
@@ -183,7 +181,7 @@ components:
                     type: string
                 location:
                     type: string
-                website:
+                other:
                     type: string
         helloworld.v1.HelloReply:
             type: object

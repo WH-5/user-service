@@ -7,6 +7,7 @@ import (
 	"github.com/WH-5/user-service/internal/conf"
 	"github.com/WH-5/user-service/internal/pkg"
 	"github.com/go-kratos/kratos/v2/log"
+	"reflect"
 	"time"
 )
 
@@ -21,7 +22,18 @@ type LoginReq struct {
 	Password string
 }
 type ProfileReq struct {
+	UniqueId string
+	Profile  *UProfile
 }
+type UProfile struct {
+	Nickname string // 用户昵称
+	Bio      string // 用户简介
+	Gender   int32  // 性别，0：未知，1：男，2：女
+	Birthday string // 生日，格式 YYYY-MM-DD
+	Location string // 位置（国家/城市）
+	Other    string //网站
+}
+
 type UniqueIdReq struct {
 }
 type RegisterReply struct {
@@ -35,6 +47,8 @@ type LoginReply struct {
 	Value string
 }
 type ProfileReply struct {
+	UniqueId string
+	Msg      string
 }
 type UniqueIdReply struct {
 }
@@ -46,15 +60,17 @@ type UserRepo interface {
 	VerifyUserAuth(ctx context.Context, field, account, password string) (bool, int64, error)
 	CanLogin(ctx context.Context, field, account string) (bool, int, error)
 	RecordLoginFailure(ctx context.Context, field, account string) (bool, error)
+	CheckUser(ctx context.Context, field, account string) (bool, error)
+	UpdateProfile(ctx context.Context, uniqueId string, profileMap map[string]any) error
 }
 type UserUsecase struct {
 	repo UserRepo
 	log  *log.Helper
-	cf   *conf.Bizfig
+	CF   *conf.Bizfig
 }
 
 func NewUserUsecase(c *conf.Bizfig, repo UserRepo, logger log.Logger) *UserUsecase {
-	return &UserUsecase{repo: repo, log: log.NewHelper(logger), cf: c}
+	return &UserUsecase{repo: repo, log: log.NewHelper(logger), CF: c}
 }
 func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*RegisterReply, error) {
 	//1. 设备注册限制 每天每设备注册x个  repo到缓存中查询设备今天是否可以注册了
@@ -77,10 +93,10 @@ func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*Registe
 		return nil, errors.New("password is invalid")
 	}
 	//3. 唯一id生成 调用生成函数
-	uniqueId := pkg.GenUniqueId(uc.cf.DefaultUniqueLength)
+	uniqueId := pkg.GenUniqueId(uc.CF.DefaultUniqueLength)
 	//4. 加密密码，并储存 调用加密函数
 	hashPwd := pkg.HashPassword(req.Password)
-	//5. 存储账号信息repo,还要在缓存里加入这个设备今天注册过一次
+	//5. 存储账号信息repo,还要在缓存里加入这个设备今天注册过一次,新增profile
 	err = uc.repo.SaveAccount(ctx, req.Phone, uniqueId, hashPwd, req.DeviceId)
 	if err != nil {
 		fmt.Println("Error during registration:", err)
@@ -129,9 +145,9 @@ func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, e
 		return nil, errors.New("login failed")
 	}
 
-	duration := time.Duration(uc.cf.JWT_EXPIRED_HOUR) * time.Hour
+	duration := time.Duration(uc.CF.JWT_EXPIRED_HOUR) * time.Hour
 	//生成jwt token
-	token, err := pkg.GenJwtToken(userId, duration, uc.cf.JWT_SECRET_KEY)
+	token, err := pkg.GenJwtToken(userId, duration, uc.CF.JWT_SECRET_KEY)
 	if err != nil {
 		return nil, err
 	}
@@ -141,10 +157,55 @@ func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, e
 	return &LoginReply{Token: token, Msg: "Login successfully", Field: field, Value: value}, nil
 }
 func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileReply, error) {
+	var msg string
+	//1. 输入唯一id
+	uniqueId := req.UniqueId
+	//2. 传入要修改的字段
+	profileMap := make(map[string]interface{})
+
+	val := reflect.ValueOf(req.Profile)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	typ := val.Type()
+	for i := 0; i < val.NumField(); i++ {
+		value := val.Field(i)
+		if value.IsZero() {
+			continue
+		}
+		field := typ.Field(i)
+		profileMap[field.Name] = value.Interface()
+		var valueStr string
+		if value.Kind() == reflect.String {
+			valueStr = value.String()
+		} else {
+			valueStr = fmt.Sprintf("%v", value.Interface())
+		}
+		msg += field.Name + "set" + valueStr + "\n"
+	}
+	err := uc.repo.UpdateProfile(ctx, uniqueId, profileMap)
+	if err != nil {
+		return nil, err
+	}
+	//3. 返回修改了的字段
+	//就是msg，最后返回
+	//4. 记录日志
 	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
-	return &ProfileReply{}, nil
+	return &ProfileReply{UniqueId: req.UniqueId, Msg: msg}, nil
 }
 func (uc *UserUsecase) UpdateUniqueId(ctx context.Context, req *UniqueIdReq) (*UniqueIdReply, error) {
 	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
 	return &UniqueIdReply{}, nil
+}
+
+// AuthCheckUser 验证token是否具有操作请求的账号的权限
+func (uc *UserUsecase) AuthCheckUser(ctx context.Context, field, account string) (bool, error) {
+	if field == "" || account == "" {
+		return false, errors.New("field or account is empty")
+	}
+	have, err := uc.repo.CheckUser(ctx, field, account)
+	if err != nil {
+		return false, err
+	}
+	return have, nil
 }

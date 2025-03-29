@@ -1,10 +1,16 @@
 package server
 
 import (
+	"context"
 	v1 "github.com/WH-5/user-service/api/helloworld/v1"
 	v2 "github.com/WH-5/user-service/api/user/v1"
 	"github.com/WH-5/user-service/internal/conf"
+	"github.com/WH-5/user-service/internal/middleware"
 	"github.com/WH-5/user-service/internal/service"
+	"github.com/go-kratos/kratos/v2/middleware/selector"
+	"strings"
+
+	"github.com/go-kratos/kratos/v2/middleware/logging"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -14,8 +20,16 @@ import (
 // NewGRPCServer new a gRPC server.
 func NewGRPCServer(c *conf.Server, greeter *service.GreeterService, userService *service.UserService, logger log.Logger) *grpc.Server {
 	var opts = []grpc.ServerOption{
-		grpc.Middleware(
+		grpc.Middleware(selector.Server(
+			middleware.AuthCheckExist(userService),
+		).Match(func(ctx context.Context, operation string) bool {
+			if strings.HasSuffix(operation, "User/Login") || strings.HasSuffix(operation, "User/Register") {
+				return false
+			}
+			return true
+		}).Build(),
 			recovery.Recovery(),
+			logging.Server(logger),
 		),
 	}
 	if c.Grpc.Network != "" {
