@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	pb "github.com/WH-5/user-service/api/user/v1"
 	"github.com/WH-5/user-service/internal/biz"
 	"github.com/WH-5/user-service/internal/pkg"
@@ -39,6 +38,7 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterRequest) (*p
 	if err != nil {
 		return nil, RegisterError(err)
 	}
+	//TODO 注册生成的uniqueid，需要判断一下
 
 	return &pb.RegisterReply{Msg: registerReply.Msg, UniqueId: registerReply.UniqueId}, nil
 }
@@ -82,8 +82,6 @@ func (s *UserService) Profile(ctx context.Context, req *pb.ProfileRequest) (*pb.
 		Location: req.UserProfile.GetLocation(),
 		Other:    req.UserProfile.GetOther(),
 	}
-	fmt.Printf("%+v\n", p)
-	fmt.Printf("%+v\n", req.UserProfile.GetNickname())
 	////如果p获取的值全为零值
 	//if pkg.IsZeroValue(*p) {
 	//	return nil, UserProfileEmptyError
@@ -109,8 +107,29 @@ func (s *UserService) Profile(ctx context.Context, req *pb.ProfileRequest) (*pb.
 	//2. 传入要修改的字段
 	//3. 返回修改了的字段
 	//4. 记录日志
-	return &pb.ProfileReply{UniqueId: profileRep.UniqueId, Msg: ""}, nil
+	return &pb.ProfileReply{UniqueId: profileRep.UniqueId, Msg: profileRep.Msg}, nil
 }
 func (s *UserService) UpdateUniqueId(ctx context.Context, req *pb.UniqueIdRequest) (*pb.UniqueIdReply, error) {
+	//检查权限
+	field := "unique_id"
+	account := req.GetUniqueId()
+	have, err := s.UC.AuthCheckUser(ctx, field, account)
+	if err != nil {
+		return nil, UniqueError(err)
+	}
+	if !have {
+		return nil, UserNotAccountPermissionError
+	}
+
+	//2. 每天只能修改一次
+	//3. 验证 合法 和有无重复的
+	//s.UC.Password(ctx)
+
 	return &pb.UniqueIdReply{}, nil
+}
+func (s *UserService) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb.GetProfileReply, error) {
+	return &pb.GetProfileReply{}, nil
+}
+func (s *UserService) UpdatePassword(ctx context.Context, req *pb.UpdatePasswordRequest) (*pb.UpdatePasswordReply, error) {
+	return &pb.UpdatePasswordReply{}, nil
 }

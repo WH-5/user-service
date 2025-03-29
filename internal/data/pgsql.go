@@ -25,13 +25,13 @@ type UserAccount struct {
 // UserProfile 表示用户的个人资料
 type UserProfile struct {
 	gorm.Model
-	UserID   uint       `gorm:"not null"`          // 关联用户 ID
-	Nickname string     `gorm:"size:100;not null"` // 用户昵称，不能为空，长度 2-30 个字符
-	Bio      string     `gorm:"size:255"`          // 用户简介，长度不超过 200 字符
-	Gender   int        `gorm:"default:0"`         // 性别，0：未知，1：男，2：女
-	Birthday *time.Time `gorm:"default:NULL"`      // 生日，格式为 YYYY-MM-DD
-	Location string     `gorm:"size:100"`          // 用户位置，如国家/城市信息
-	Other    string     `gorm:"size:255"`          // 个人网站或社交媒体链接
+	UserID   uint       `gorm:"not null"`           // 关联用户 ID
+	Nickname string     `gorm:"size:100;not null"`  // 用户昵称，不能为空，长度 2-30 个字符
+	Bio      string     `gorm:"size:255"`           // 用户简介，长度不超过 200 字符
+	Gender   int        `gorm:"default:0"`          // 性别，0：未知，1：男，2：女
+	Birthday *time.Time `gorm:"default:2002-07-29"` // 生日，格式为 YYYY-MM-DD
+	Location string     `gorm:"size:100"`           // 用户位置，如国家/城市信息
+	Other    string     `gorm:"size:255"`           // 个人网站或社交媒体链接
 }
 
 //// UserDevice 表示用户的设备信息

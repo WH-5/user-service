@@ -14,7 +14,7 @@ import (
 // 定义密钥（用于 HMAC 签名）
 
 // GenJwtToken 生成 JWT
-func GenJwtToken(userID int64, duration time.Duration, key string) (string, error) {
+func GenJwtToken(userID uint, duration time.Duration, key string) (string, error) {
 	secretKey := []byte(key)
 	// 创建 payload
 	claims := jwt.MapClaims{

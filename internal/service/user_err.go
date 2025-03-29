@@ -26,6 +26,7 @@ var (
 	UserLoginError    = ErrStruct{code: 453, name: "USER_LOGIN_ERROR"}
 	UserProfileError  = ErrStruct{code: 454, name: "USER_PROFILE_ERROR"}
 	UserUniqueError   = ErrStruct{code: 455, name: "USER_UNIQUE_ERROR"}
+	UserPasswordError = ErrStruct{code: 456, name: "USER_PASSWORD_ERROR"}
 )
 
 func UserError(e ErrStruct, err error) *errors.Error {
@@ -45,5 +46,9 @@ func ProfileError(err error) *errors.Error {
 }
 func UniqueError(err error) *errors.Error {
 	e := UserUniqueError
+	return errors.New(e.code, e.name, err.Error())
+}
+func PasswordError(err error) *errors.Error {
+	e := UserPasswordError
 	return errors.New(e.code, e.name, err.Error())
 }

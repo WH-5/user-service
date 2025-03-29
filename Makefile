@@ -62,6 +62,16 @@ all:
 	make config;
 	make generate;
 
+
+.PHONY: validate
+# generate validate proto
+validate:
+		protoc --proto_path=. \
+           --proto_path=./third_party \
+           --go_out=paths=source_relative:. \
+           --validate_out=paths=source_relative,lang=go:. \
+           $(API_PROTO_FILES)
+
 # show help
 help:
 	@echo ''

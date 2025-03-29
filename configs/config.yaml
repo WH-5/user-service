@@ -9,7 +9,7 @@ server:
 data:
   database:
     driver: postgres
-    source: postgres://root:whwhwhwhwhwhwhwh12321wh@localhost:5432/user_service?sslmode=disable
+    source: postgres://root:whwhwhwhwhwhwhwh12321wh@localhost:5432/user_service?sslmode=disable&TimeZone=Asia/Shanghai
   redis:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s
@@ -26,6 +26,6 @@ bizfig:
   JWT_SECRET_KEY: test
   JWT_SERVICE_KEY: test
   default_unique_length: 6
-  JWT_EXPIRED_HOUR: 1
+  JWT_EXPIRED_HOUR: 72
 
 

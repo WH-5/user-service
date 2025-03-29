@@ -52,12 +52,22 @@ type ProfileReply struct {
 }
 type UniqueIdReply struct {
 }
+type GetProfileReq struct {
+	UniqueId string
+}
+type GetProfileReply struct {
+	UProfile *UProfile
+	Phone    string
+}
+type PasswordReq struct{}
+type PasswordReply struct{}
+
 type UserRepo interface {
 	CheckPhone(ctx context.Context, phone string) (bool, error)
 	CheckDeviceId(ctx context.Context, deviceId string) (bool, error)
 	SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, deviceId string) error
 	WriteLog(ctx context.Context) error
-	VerifyUserAuth(ctx context.Context, field, account, password string) (bool, int64, error)
+	VerifyUserAuth(ctx context.Context, field, account, password string) (bool, uint, error)
 	CanLogin(ctx context.Context, field, account string) (bool, int, error)
 	RecordLoginFailure(ctx context.Context, field, account string) (bool, error)
 	CheckUser(ctx context.Context, field, account string) (bool, error)
@@ -168,7 +178,8 @@ func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileRe
 		val = val.Elem()
 	}
 	typ := val.Type()
-	for i := 0; i < val.NumField(); i++ {
+	n := typ.NumField()
+	for i := 0; i < n; i++ {
 		value := val.Field(i)
 		if value.IsZero() {
 			continue
@@ -181,8 +192,10 @@ func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileRe
 		} else {
 			valueStr = fmt.Sprintf("%v", value.Interface())
 		}
-		msg += field.Name + "set" + valueStr + "\n"
+
+		msg += fmt.Sprintf(field.Name) + " set " + valueStr + ","
 	}
+
 	err := uc.repo.UpdateProfile(ctx, uniqueId, profileMap)
 	if err != nil {
 		return nil, err
@@ -191,11 +204,22 @@ func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileRe
 	//就是msg，最后返回
 	//4. 记录日志
 	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
-	return &ProfileReply{UniqueId: req.UniqueId, Msg: msg}, nil
+
+	//msg[:len(msg)-1]去除最后一个逗号
+	return &ProfileReply{UniqueId: req.UniqueId, Msg: msg[:len(msg)-1]}, nil
 }
 func (uc *UserUsecase) UpdateUniqueId(ctx context.Context, req *UniqueIdReq) (*UniqueIdReply, error) {
+	//每天只能修改一次
+	//验证合法 和有无重复的
 	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
 	return &UniqueIdReply{}, nil
+}
+func (uc *UserUsecase) GetProfile(ctx context.Context, req *GetProfileReq) (*GetProfileReply, error) {
+
+	return &GetProfileReply{}, nil
+}
+func (uc *UserUsecase) Password(ctx context.Context, req *PasswordReq) (*PasswordReply, error) {
+	return &PasswordReply{}, nil
 }
 
 // AuthCheckUser 验证token是否具有操作请求的账号的权限

@@ -19,15 +19,19 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationUserGetProfile = "/api.user.v1.User/GetProfile"
 const OperationUserLogin = "/api.user.v1.User/Login"
 const OperationUserProfile = "/api.user.v1.User/Profile"
 const OperationUserRegister = "/api.user.v1.User/Register"
+const OperationUserUpdatePassword = "/api.user.v1.User/UpdatePassword"
 const OperationUserUpdateUniqueId = "/api.user.v1.User/UpdateUniqueId"
 
 type UserHTTPServer interface {
+	GetProfile(context.Context, *GetProfileRequest) (*GetProfileReply, error)
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
 	Profile(context.Context, *ProfileRequest) (*ProfileReply, error)
 	Register(context.Context, *RegisterRequest) (*RegisterReply, error)
+	UpdatePassword(context.Context, *UpdatePasswordRequest) (*UpdatePasswordReply, error)
 	UpdateUniqueId(context.Context, *UniqueIdRequest) (*UniqueIdReply, error)
 }
 
@@ -37,6 +41,8 @@ func RegisterUserHTTPServer(s *http.Server, srv UserHTTPServer) {
 	r.POST("/user/login", _User_Login0_HTTP_Handler(srv))
 	r.POST("/user/profile", _User_Profile0_HTTP_Handler(srv))
 	r.POST("/user/unique", _User_UpdateUniqueId0_HTTP_Handler(srv))
+	r.GET("/user/profile/info/{unique_id}", _User_GetProfile0_HTTP_Handler(srv))
+	r.POST("/user/password", _User_UpdatePassword0_HTTP_Handler(srv))
 }
 
 func _User_Register0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Context) error {
@@ -127,10 +133,56 @@ func _User_UpdateUniqueId0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Contex
 	}
 }
 
+func _User_GetProfile0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetProfileRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationUserGetProfile)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetProfile(ctx, req.(*GetProfileRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetProfileReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _User_UpdatePassword0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdatePasswordRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationUserUpdatePassword)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdatePassword(ctx, req.(*UpdatePasswordRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UpdatePasswordReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type UserHTTPClient interface {
+	GetProfile(ctx context.Context, req *GetProfileRequest, opts ...http.CallOption) (rsp *GetProfileReply, err error)
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *LoginReply, err error)
 	Profile(ctx context.Context, req *ProfileRequest, opts ...http.CallOption) (rsp *ProfileReply, err error)
 	Register(ctx context.Context, req *RegisterRequest, opts ...http.CallOption) (rsp *RegisterReply, err error)
+	UpdatePassword(ctx context.Context, req *UpdatePasswordRequest, opts ...http.CallOption) (rsp *UpdatePasswordReply, err error)
 	UpdateUniqueId(ctx context.Context, req *UniqueIdRequest, opts ...http.CallOption) (rsp *UniqueIdReply, err error)
 }
 
@@ -140,6 +192,19 @@ type UserHTTPClientImpl struct {
 
 func NewUserHTTPClient(client *http.Client) UserHTTPClient {
 	return &UserHTTPClientImpl{client}
+}
+
+func (c *UserHTTPClientImpl) GetProfile(ctx context.Context, in *GetProfileRequest, opts ...http.CallOption) (*GetProfileReply, error) {
+	var out GetProfileReply
+	pattern := "/user/profile/info/{unique_id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationUserGetProfile))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *UserHTTPClientImpl) Login(ctx context.Context, in *LoginRequest, opts ...http.CallOption) (*LoginReply, error) {
@@ -173,6 +238,19 @@ func (c *UserHTTPClientImpl) Register(ctx context.Context, in *RegisterRequest, 
 	pattern := "/user/register"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationUserRegister))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *UserHTTPClientImpl) UpdatePassword(ctx context.Context, in *UpdatePasswordRequest, opts ...http.CallOption) (*UpdatePasswordReply, error) {
+	var out UpdatePasswordReply
+	pattern := "/user/password"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationUserUpdatePassword))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {

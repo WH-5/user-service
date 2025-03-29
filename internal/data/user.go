@@ -41,13 +41,13 @@ func (u *userRepo) CheckUser(ctx context.Context, field, account string) (bool, 
 	if err != nil {
 		return false, err
 	}
-	if userId == int64(uid) {
+	if userId == uint(uid) {
 		return true, nil
 	}
 	return false, nil
 }
 
-func (u *userRepo) VerifyUserAuth(ctx context.Context, field, account, password string) (bool, int64, error) {
+func (u *userRepo) VerifyUserAuth(ctx context.Context, field, account, password string) (bool, uint, error) {
 	//验证账号密码是否正确,如果正确，返回用户id
 	userId, err := u.findUserId(field, account)
 	if err != nil {
@@ -91,16 +91,16 @@ func (u *userRepo) CanLogin(ctx context.Context, field, account string) (bool, i
 	t := int(math.Ceil(ttl.Minutes()))
 	return false, t, nil
 }
-func (u *userRepo) findUserId(field, account string) (int64, error) {
+func (u *userRepo) findUserId(field, account string) (uint, error) {
 	//如果没找到，直接返回账号不存在
-	var userId int64
+	var userId uint
 	q := field + " = ?"
 	result := u.data.DB.Model(&UserAccount{}).Select("id").Where(q, account).Scan(&userId)
 	if result.Error != nil {
-		return -1, result.Error
+		return 0, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return -1, errors.New(fmt.Sprintf("%s:%s not exist", field, account))
+		return 0, errors.New(fmt.Sprintf("%s:%s not exist", field, account))
 	}
 	return userId, nil
 }
@@ -190,7 +190,20 @@ func (u *userRepo) SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, de
 		//缓存中有当前设备码，直接加一
 		u.data.RD.Incr(ctx, DI)
 	}
+	uid, err := u.findUserId("unique_id", uniqueId)
+	if err != nil {
+		return err
+	}
 	//TODO 还需要初始化profile
+	up := &UserProfile{
+		UserID:   uid,
+		Nickname: uniqueId,
+	}
+	err = u.data.DB.Model(&UserProfile{}).Create(up).Error
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

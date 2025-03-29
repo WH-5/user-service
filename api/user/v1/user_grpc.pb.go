@@ -23,6 +23,8 @@ const (
 	User_Login_FullMethodName          = "/api.user.v1.User/Login"
 	User_Profile_FullMethodName        = "/api.user.v1.User/Profile"
 	User_UpdateUniqueId_FullMethodName = "/api.user.v1.User/UpdateUniqueId"
+	User_GetProfile_FullMethodName     = "/api.user.v1.User/GetProfile"
+	User_UpdatePassword_FullMethodName = "/api.user.v1.User/UpdatePassword"
 )
 
 // UserClient is the client API for User service.
@@ -33,6 +35,8 @@ type UserClient interface {
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginReply, error)
 	Profile(ctx context.Context, in *ProfileRequest, opts ...grpc.CallOption) (*ProfileReply, error)
 	UpdateUniqueId(ctx context.Context, in *UniqueIdRequest, opts ...grpc.CallOption) (*UniqueIdReply, error)
+	GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileReply, error)
+	UpdatePassword(ctx context.Context, in *UpdatePasswordRequest, opts ...grpc.CallOption) (*UpdatePasswordReply, error)
 }
 
 type userClient struct {
@@ -83,6 +87,26 @@ func (c *userClient) UpdateUniqueId(ctx context.Context, in *UniqueIdRequest, op
 	return out, nil
 }
 
+func (c *userClient) GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProfileReply)
+	err := c.cc.Invoke(ctx, User_GetProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userClient) UpdatePassword(ctx context.Context, in *UpdatePasswordRequest, opts ...grpc.CallOption) (*UpdatePasswordReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdatePasswordReply)
+	err := c.cc.Invoke(ctx, User_UpdatePassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility.
@@ -91,6 +115,8 @@ type UserServer interface {
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
 	Profile(context.Context, *ProfileRequest) (*ProfileReply, error)
 	UpdateUniqueId(context.Context, *UniqueIdRequest) (*UniqueIdReply, error)
+	GetProfile(context.Context, *GetProfileRequest) (*GetProfileReply, error)
+	UpdatePassword(context.Context, *UpdatePasswordRequest) (*UpdatePasswordReply, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -112,6 +138,12 @@ func (UnimplementedUserServer) Profile(context.Context, *ProfileRequest) (*Profi
 }
 func (UnimplementedUserServer) UpdateUniqueId(context.Context, *UniqueIdRequest) (*UniqueIdReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUniqueId not implemented")
+}
+func (UnimplementedUserServer) GetProfile(context.Context, *GetProfileRequest) (*GetProfileReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProfile not implemented")
+}
+func (UnimplementedUserServer) UpdatePassword(context.Context, *UpdatePasswordRequest) (*UpdatePasswordReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePassword not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 func (UnimplementedUserServer) testEmbeddedByValue()              {}
@@ -206,6 +238,42 @@ func _User_UpdateUniqueId_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_GetProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).GetProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_GetProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).GetProfile(ctx, req.(*GetProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _User_UpdatePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).UpdatePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_UpdatePassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).UpdatePassword(ctx, req.(*UpdatePasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +296,14 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateUniqueId",
 			Handler:    _User_UpdateUniqueId_Handler,
+		},
+		{
+			MethodName: "GetProfile",
+			Handler:    _User_GetProfile_Handler,
+		},
+		{
+			MethodName: "UpdatePassword",
+			Handler:    _User_UpdatePassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

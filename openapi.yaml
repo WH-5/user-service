@@ -43,6 +43,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.user.v1.LoginReply'
+    /user/password:
+        post:
+            tags:
+                - User
+            operationId: User_UpdatePassword
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.user.v1.UpdatePasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.user.v1.UpdatePasswordReply'
     /user/profile:
         post:
             tags:
@@ -61,6 +79,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.user.v1.ProfileReply'
+    /user/profile/info/{uniqueId}:
+        get:
+            tags:
+                - User
+            operationId: User_GetProfile
+            parameters:
+                - name: uniqueId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.user.v1.GetProfileReply'
     /user/register:
         post:
             tags:
@@ -99,6 +135,15 @@ paths:
                                 $ref: '#/components/schemas/api.user.v1.UniqueIdReply'
 components:
     schemas:
+        api.user.v1.GetProfileReply:
+            type: object
+            properties:
+                profile:
+                    $ref: '#/components/schemas/api.user.v1.UserProfile'
+                phone:
+                    type: string
+                msg:
+                    type: string
         api.user.v1.LoginReply:
             type: object
             properties:
@@ -166,6 +211,22 @@ components:
                 newUniqueId:
                     type: string
                 phone:
+                    type: string
+        api.user.v1.UpdatePasswordReply:
+            type: object
+            properties:
+                uniqueId:
+                    type: string
+                msg:
+                    type: string
+        api.user.v1.UpdatePasswordRequest:
+            type: object
+            properties:
+                uniqueId:
+                    type: string
+                oldPassword:
+                    type: string
+                newPassword:
                     type: string
         api.user.v1.UserProfile:
             type: object

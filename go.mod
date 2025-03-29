@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.23.5
 
 require (
+	github.com/envoyproxy/protoc-gen-validate v1.2.1
 	github.com/go-kratos/kratos/v2 v2.8.4
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v5 v5.1.0

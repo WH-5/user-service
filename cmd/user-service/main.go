@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/WH-5/user-service/internal/conf"
 
@@ -37,6 +39,14 @@ func getConfigPath() string {
 }
 func init() {
 	flag.StringVar(&flagconf, "conf", getConfigPath(), "config path, eg: -conf config.yaml")
+	// 设置全局时区为 UTC+8
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		fmt.Println("Error loading location:", err)
+		return
+	}
+	// 设置全局时区
+	time.Local = loc
 }
 
 func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
