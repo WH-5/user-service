@@ -222,6 +222,8 @@ components:
                     type: string
                 oldPassword:
                     type: string
+                newPassword:
+                    type: string
         api.user.v1.UserProfile:
             type: object
             properties:

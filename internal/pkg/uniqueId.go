@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	charSet       = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
-	uniqueIdRegex = "^[a-zA-Z0-9_-]{1,20}$"
+	charSet              = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
+	uniqueIdRegex        = "^[a-zA-Z0-9_-]{1,20}$"
+	UNIQUE_ID_BIG_LENGTH = 10
 )
 
 // CheckUniqueIdIsValid 检查id格式

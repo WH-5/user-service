@@ -101,6 +101,28 @@ func (m *UpdatePasswordRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if l := utf8.RuneCountInString(m.GetNewPassword()); l < 6 || l > 32 {
+		err := UpdatePasswordRequestValidationError{
+			field:  "NewPassword",
+			reason: "value length must be between 6 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdatePasswordRequest_NewPassword_Pattern.MatchString(m.GetNewPassword()) {
+		err := UpdatePasswordRequestValidationError{
+			field:  "NewPassword",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9!@#$%^&*()\\\\-_=+.?]{6,32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return UpdatePasswordRequestMultiError(errors)
 	}
@@ -184,6 +206,8 @@ var _ interface {
 var _UpdatePasswordRequest_UniqueId_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]{1,20}$")
 
 var _UpdatePasswordRequest_OldPassword_Pattern = regexp.MustCompile("^[a-zA-Z0-9!@#$%^&*()\\-_=+.?]{6,32}$")
+
+var _UpdatePasswordRequest_NewPassword_Pattern = regexp.MustCompile("^[a-zA-Z0-9!@#$%^&*()\\-_=+.?]{6,32}$")
 
 // Validate checks the field values on UpdatePasswordReply with the rules
 // defined in the proto definition for this message. If any rules are

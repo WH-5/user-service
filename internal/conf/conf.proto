@@ -51,6 +51,7 @@ message Data {
   Redis redis = 2;
   Other other =3;
 }
+//新加的配置项记得在代码那边初始化一下
 message Bizfig {
     string JWT_SECRET_KEY=1;
     string JWT_SERVICE_KEY=2;

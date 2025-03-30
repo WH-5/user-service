@@ -8,6 +8,7 @@ import (
 	"github.com/WH-5/user-service/internal/middleware"
 	"github.com/WH-5/user-service/internal/service"
 	"github.com/go-kratos/kratos/v2/middleware/selector"
+	"github.com/go-kratos/kratos/v2/middleware/validate"
 	"strings"
 
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -30,6 +31,7 @@ func NewGRPCServer(c *conf.Server, greeter *service.GreeterService, userService 
 		}).Build(),
 			recovery.Recovery(),
 			logging.Server(logger),
+			validate.Validator(),
 		),
 	}
 	if c.Grpc.Network != "" {

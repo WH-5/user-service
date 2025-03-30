@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/WH-5/user-service/internal/conf"
@@ -13,65 +14,72 @@ import (
 )
 
 type RegisterReq struct {
-	Phone    string
-	Password string
-	DeviceId string
+	Phone    string `json:"phone"`
+	Password string `json:"password"`
+	DeviceId string `json:"device_id"`
 }
 type LoginReq struct {
-	Phone    string
-	Unique   string
-	Password string
+	Phone    string `json:"phone"`
+	Unique   string `json:"unique"`
+	Password string `json:"password"`
 }
 type ProfileReq struct {
-	UniqueId string
-	Profile  *UProfile
+	UniqueId string    `json:"unique_id"`
+	Profile  *UProfile `json:"profile"`
 }
 type UProfile struct {
-	Nickname string // 用户昵称
-	Bio      string // 用户简介
-	Gender   int32  // 性别，0：未知，1：男，2：女
-	Birthday string // 生日，格式 YYYY-MM-DD
-	Location string // 位置（国家/城市）
-	Other    string //网站
+	Nickname string `json:"nickname"` // 用户昵称
+	Bio      string `json:"bio"`      // 用户简介
+	Gender   int32  `json:"gender"`   // 性别，0：未知，1：男，2：女
+	Birthday string `json:"birthday"` // 生日，格式 YYYY-MM-DD
+	Location string `json:"location"` // 位置（国家/城市）
+	Other    string `json:"other"`    //网站
 }
 
 type UniqueIdReq struct {
-	UniqueId    string
-	NewUniqueId string
+	UniqueId    string `json:"unique_id"`
+	NewUniqueId string `json:"new_unique_id"`
 }
 type RegisterReply struct {
-	Msg      string
-	UniqueId string
+	Msg      string `json:"msg"`
+	UniqueId string `json:"unique_id"`
 }
 type LoginReply struct {
-	Token string
-	Msg   string
-	Field string
-	Value string
+	Token string `json:"token"`
+	Msg   string `json:"msg"`
+	Field string `json:"field"`
+	Value string `json:"value"`
 }
 type ProfileReply struct {
-	UniqueId string
-	Msg      string
+	UniqueId string `json:"unique_id"`
+	Msg      string `json:"msg"`
 }
 type UniqueIdReply struct {
-	NewUniqueId string
-	Msg         string
+	NewUniqueId string `json:"new_unique_id"`
+	Msg         string `json:"msg"`
 }
 type GetProfileReq struct {
-	UniqueId string
+	UniqueId string `json:"unique_id"`
 }
 type GetProfileReply struct {
-	UProfile *UProfile
-	Phone    string
+	UProfile *UProfile `json:"uprofile"`
+	Phone    string    `json:"phone"`
 }
-type PasswordReq struct{}
-type PasswordReply struct{}
+type PasswordReq struct {
+	UniqueId    string `json:"unique_id"`
+	Password    string `json:"password"`
+	NewPassword string `json:"new_password"`
+}
+type PasswordReply struct {
+	UniqueId string `json:"unique_id"`
+	Msg      string `json:"msg"`
+}
 
 type UserRepo interface {
 	CheckPhone(ctx context.Context, phone string) (bool, error)
 	CheckDeviceId(ctx context.Context, deviceId string) (bool, error)
 	SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, deviceId string) error
-	WriteLog(ctx context.Context) error
+	WriteLog(ctx context.Context, userId uint, action string, meta []byte)
 	VerifyUserAuth(ctx context.Context, field, account, password string) (bool, uint, error)
 	CanLogin(ctx context.Context, field, account string) (bool, int, error)
 	RecordLoginFailure(ctx context.Context, field, account string) (bool, error)
@@ -81,6 +89,12 @@ type UserRepo interface {
 	CheckUniqueValid(ctx context.Context, uniqueId string) (bool, error)
 	UpdateUniqueId(ctx context.Context, uniqueId, newUniqueId string) error
 	RecordModifyUniqueIdOnRedis(ctx context.Context, uid string) error
+	GetProfileByUniqueId(ctx context.Context, uniqueId string) (*UProfile, error)
+	GetPhoneByUniqueId(ctx context.Context, uniqueId string) (string, error)
+	ModifyPassword(ctx context.Context, userId uint, newHashPassword string) error
+	RecordPasswordFailure(ctx context.Context, uniqueId string) error
+	CheckPasswordByUserId(ctx context.Context, uniqueId string) error
+	FindUserId(field, account string) (uint, error)
 }
 type UserUsecase struct {
 	repo UserRepo
@@ -111,8 +125,25 @@ func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*Registe
 	if !pwdCan {
 		return nil, errors.New("password is invalid")
 	}
-	//3. 唯一id生成 调用生成函数
-	uniqueId := pkg.GenUniqueId(uc.CF.DefaultUniqueLength)
+	//3. 唯一id生成 调用生成函数 检查是否可用
+	var uniqueId string
+	for i := 0; i < 3; i++ {
+		if i == 2 {
+			//如果第二次还不行直接返回一个长一点的 还不行 赶紧买彩票  概率远小于1/10^64
+			//注:不行 会返回ERROR: duplicate key value violates unique constraint "unique_id" (SQLSTATE 23505)
+			uniqueId = pkg.GenUniqueId(pkg.UNIQUE_ID_BIG_LENGTH)
+			break
+		}
+		uniqueId = pkg.GenUniqueId(uc.CF.DefaultUniqueLength)
+		valid, err := uc.repo.CheckUniqueValid(ctx, uniqueId)
+		if err != nil {
+			return nil, err
+		}
+		if valid {
+			break
+		}
+	}
+
 	//4. 加密密码，并储存 调用加密函数
 	hashPwd := pkg.HashPassword(req.Password)
 	//5. 存储账号信息repo,还要在缓存里加入这个设备今天注册过一次,新增profile
@@ -122,8 +153,20 @@ func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*Registe
 		return nil, err
 	}
 	//6. 记录注册日志 repo到数据库记录
-	//TODO 记录到数据库
+
 	uc.log.WithContext(ctx).Infof("Register: %v", req.Phone)
+
+	meta, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	userId, err := uc.repo.FindUserId("unique_id", uniqueId)
+	if err != nil {
+		return nil, err
+	}
+	//不是核心逻辑，异步写入
+	go uc.repo.WriteLog(ctx, userId, "register", meta)
+
 	return &RegisterReply{
 		UniqueId: uniqueId,
 		Msg:      "register successfully",
@@ -155,13 +198,14 @@ func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, e
 	}
 	if !isAuth {
 		//记录登录失败 存到数据库和缓存 连续失败x次，限制登录x分钟
+		//这里false基本上是因为密码错误
 		state, err := uc.repo.RecordLoginFailure(ctx, field, value)
 		if err != nil || !state {
 			//输出到日志
 			uc.log.WithContext(ctx).Errorf("login failed record failed, state: %v, err: %v", state, err)
 		}
 		uc.log.WithContext(ctx).Errorf("login failed : %v[%v]", field, value)
-		return nil, errors.New("login failed")
+		return nil, errors.New("login failed : wrong password")
 	}
 
 	duration := time.Duration(uc.CF.JWT_EXPIRED_HOUR) * time.Hour
@@ -172,7 +216,8 @@ func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, e
 	}
 	//记录登录日志
 	uc.log.WithContext(ctx).Infof("Login: %v[%v]", field, value)
-
+	meta, err := json.Marshal(req)
+	go uc.repo.WriteLog(ctx, userId, "login", meta)
 	return &LoginReply{Token: token, Msg: "Login successfully", Field: field, Value: value}, nil
 }
 func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileReply, error) {
@@ -212,7 +257,12 @@ func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileRe
 	//3. 返回修改了的字段
 	//就是msg，最后返回
 	//4. 记录日志
-	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
+	userId, err := uc.repo.FindUserId("unique_id", uniqueId)
+	if err != nil {
+		return nil, err
+	}
+	meta, err := json.Marshal(req)
+	go uc.repo.WriteLog(ctx, userId, "profile", meta)
 
 	//msg[:len(msg)-1]去除最后一个逗号
 	return &ProfileReply{UniqueId: req.UniqueId, Msg: msg[:len(msg)-1]}, nil
@@ -244,14 +294,58 @@ func (uc *UserUsecase) UpdateUniqueId(ctx context.Context, req *UniqueIdReq) (*U
 		m += " but save failed"
 	}
 	//uc.log.WithContext(ctx).Infof("Create: %v", user.Name)
+
+	meta, err := json.Marshal(req)
+	go uc.repo.WriteLog(ctx, uid, "unique", meta)
 	return &UniqueIdReply{NewUniqueId: req.NewUniqueId, Msg: m}, nil
 }
 func (uc *UserUsecase) GetProfile(ctx context.Context, req *GetProfileReq) (*GetProfileReply, error) {
-
-	return &GetProfileReply{}, nil
+	phone, err := uc.repo.GetPhoneByUniqueId(ctx, req.UniqueId)
+	if err != nil {
+		//必须要有手机号，没有就不查
+		return nil, err
+	}
+	//不用其他验证，直接给出数据
+	profileByUniqueId, err := uc.repo.GetProfileByUniqueId(ctx, req.UniqueId)
+	if err != nil {
+		return nil, err
+	}
+	return &GetProfileReply{UProfile: profileByUniqueId, Phone: phone}, nil
 }
 func (uc *UserUsecase) Password(ctx context.Context, req *PasswordReq) (*PasswordReply, error) {
-	return &PasswordReply{}, nil
+	//检查现在能不能改密码(有限制，在规定的分钟里只能改一次，还有连续x分钟输错y次要限制x分钟，在config.yaml文件中配置)
+	//判断在函数里做了，只需要看有没有err
+	err := uc.repo.CheckPasswordByUserId(ctx, req.UniqueId)
+	if err != nil {
+		return nil, err
+	}
+	//检查密码是否正确
+	auth, userId, err := uc.repo.VerifyUserAuth(ctx, "unique_id", req.UniqueId, req.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	//密码不正确，记录下来
+	if !auth {
+		err := uc.repo.RecordPasswordFailure(ctx, req.UniqueId)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("wrong password")
+	}
+
+	//加密新密码
+	hashPwd := pkg.HashPassword(req.NewPassword)
+
+	//改密码，并记录
+	err = uc.repo.ModifyPassword(ctx, userId, hashPwd)
+
+	meta, err := json.Marshal(req)
+	go uc.repo.WriteLog(ctx, userId, "password", meta)
+	return &PasswordReply{
+		Msg:      "change password successfully",
+		UniqueId: req.UniqueId,
+	}, nil
 }
 
 // AuthCheckUser 验证token是否具有操作请求的账号的权限

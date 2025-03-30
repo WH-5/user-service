@@ -7,6 +7,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	pb "github.com/WH-5/user-service/api/user/v1"
 	"github.com/WH-5/user-service/internal/biz"
 	"github.com/WH-5/user-service/internal/pkg"
@@ -43,7 +45,6 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterRequest) (*p
 	if err != nil {
 		return nil, RegisterError(err)
 	}
-	//TODO 注册生成的uniqueid，需要判断一下
 
 	return &pb.RegisterReply{Msg: registerReply.Msg, UniqueId: registerReply.UniqueId}, nil
 }
@@ -155,8 +156,21 @@ func (s *UserService) GetProfile(ctx context.Context, req *pb.GetProfileRequest)
 		}
 	}
 	//获取信息
-
-	return &pb.GetProfileReply{}, nil
+	prof, err := s.UC.GetProfile(ctx, &biz.GetProfileReq{UniqueId: req.GetUniqueId()})
+	if err != nil {
+		return nil, ProfileError(err)
+	}
+	//转换成json 在转回去 可以把在逻辑层定义的profile结构体的内容复制到接口输出的结构体中
+	data, err := json.Marshal(prof.UProfile)
+	if err != nil {
+		return nil, ProfileError(err)
+	}
+	var p pb.UserProfile
+	err = json.Unmarshal(data, &p)
+	if err != nil {
+		return nil, ProfileError(err)
+	}
+	return &pb.GetProfileReply{Msg: "get profile success", Profile: &p, Phone: prof.Phone}, nil
 }
 func (s *UserService) UpdatePassword(ctx context.Context, req *pb.UpdatePasswordRequest) (*pb.UpdatePasswordReply, error) {
 	//检查权限
@@ -172,6 +186,20 @@ func (s *UserService) UpdatePassword(ctx context.Context, req *pb.UpdatePassword
 		}
 	}
 	//改密码
+	//第一个校验新旧密码是否一样
+	if req.GetNewPassword() == req.GetOldPassword() {
+		return nil, PasswordError(errors.New("old password cannot be equal to new password"))
+	}
 
-	return &pb.UpdatePasswordReply{}, nil
+	//1. 查询在x分钟内是否改过，及是否合法(在新增改动中，增加了格式验证 不用考虑这个了)
+	//2. 对新密码进行加密，然后改动
+	password, err := s.UC.Password(ctx, &biz.PasswordReq{
+		UniqueId:    req.GetUniqueId(),
+		Password:    req.GetOldPassword(),
+		NewPassword: req.GetNewPassword(),
+	})
+	if err != nil {
+		return nil, PasswordError(err)
+	}
+	return &pb.UpdatePasswordReply{UniqueId: password.UniqueId, Msg: password.Msg}, nil
 }

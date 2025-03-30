@@ -49,6 +49,7 @@ service User {
 message UpdatePasswordRequest{
 	string unique_id=1 [(validate.rules).string = {min_len: 1, max_len: 20, pattern: "^[a-zA-Z0-9_-]{1,20}$"}];
 	string old_password=2 [(validate.rules).string = {min_len: 6, max_len: 32, pattern: "^[a-zA-Z0-9!@#$%^&*()\\-_=+.?]{6,32}$"}];
+	string new_password=3 [(validate.rules).string = {min_len: 6, max_len: 32, pattern: "^[a-zA-Z0-9!@#$%^&*()\\-_=+.?]{6,32}$"}];
 }
 message UpdatePasswordReply{
 	string unique_id=1;

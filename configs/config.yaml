@@ -18,15 +18,15 @@ data:
     password: "123456"
     dial_timeout: 5s
   other:
-    register_limit_everydevice_everyday: 3
-    max_failed_login_attempts: 5
-    account_lock_duration_minutes: 5
-    password_modify_lock_duration_minutes: 10
+    register_limit_everydevice_everyday: 3 #每个设备每天能注册账号的数量
+    max_failed_login_attempts: 5 #登录失败x次锁定 和修改密码时输错密码锁定的次数 两个不共用但是相同
+    account_lock_duration_minutes: 5 #锁定的分钟数 同上
+    password_modify_lock_duration_minutes: 10 #改密码后不能再次修改的分钟数
 
 bizfig:
-  JWT_SECRET_KEY: test
+  JWT_SECRET_KEY: test #jwt的密钥
   JWT_SERVICE_KEY: test
-  default_unique_length: 6
-  JWT_EXPIRED_HOUR: 72
+  default_unique_length: 6 #默认生成的唯一标识长度
+  JWT_EXPIRED_HOUR: 72 #账号token过期的时间，单位小时
 
 

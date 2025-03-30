@@ -10,6 +10,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/google/wire v0.6.0
+	github.com/jinzhu/copier v0.4.0
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/crypto v0.36.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250313205543-e70fdf4c4cb4

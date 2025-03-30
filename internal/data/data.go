@@ -20,9 +20,10 @@ type Data struct {
 	OT Other
 }
 type Other struct {
-	RegisterLimit              int32
-	MaxFailedLoginAttempts     int32
-	AccountLockDurationMinutes int32
+	RegisterLimit                     int32
+	MaxFailedLoginAttempts            int32
+	AccountLockDurationMinutes        int32
+	PasswordModifyLockDurationMinutes int32
 }
 
 // NewData .
@@ -66,7 +67,8 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 
 	return &Data{DB: db, RD: rdb,
 		OT: Other{RegisterLimit: c.Other.GetRegisterLimitEverydeviceEveryday(),
-			MaxFailedLoginAttempts:     c.Other.GetMaxFailedLoginAttempts(),
-			AccountLockDurationMinutes: c.Other.AccountLockDurationMinutes,
+			MaxFailedLoginAttempts:            c.Other.GetMaxFailedLoginAttempts(),
+			AccountLockDurationMinutes:        c.Other.AccountLockDurationMinutes,
+			PasswordModifyLockDurationMinutes: c.Other.PasswordModifyLockDurationMinutes,
 		}}, cleanup, nil
 }
