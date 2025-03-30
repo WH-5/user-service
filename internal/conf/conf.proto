@@ -45,6 +45,7 @@ message Data {
     int32 register_limit_everydevice_everyday=1;
     int32 max_failed_login_attempts=2;
     int32 account_lock_duration_minutes=3;
+    int32 password_modify_lock_duration_minutes=4;
   }
   Database database = 1;
   Redis redis = 2;

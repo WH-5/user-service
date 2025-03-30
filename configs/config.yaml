@@ -21,6 +21,7 @@ data:
     register_limit_everydevice_everyday: 3
     max_failed_login_attempts: 5
     account_lock_duration_minutes: 5
+    password_modify_lock_duration_minutes: 10
 
 bizfig:
   JWT_SECRET_KEY: test

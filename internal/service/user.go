@@ -70,14 +70,16 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 }
 func (s *UserService) Profile(ctx context.Context, req *pb.ProfileRequest) (*pb.ProfileReply, error) {
 	//检查权限
-	field := "unique_id"
-	account := req.GetUniqueId()
-	have, err := s.UC.AuthCheckUser(ctx, field, account)
-	if err != nil {
-		return nil, ProfileError(err)
-	}
-	if !have {
-		return nil, UserNotAccountPermissionError
+	{
+		field := "unique_id"
+		account := req.GetUniqueId()
+		have, err := s.UC.AuthCheckUser(ctx, field, account)
+		if err != nil {
+			return nil, ProfileError(err)
+		}
+		if !have {
+			return nil, UserNotAccountPermissionError
+		}
 	}
 	p := &biz.UProfile{
 		Nickname: req.UserProfile.GetNickname(),
@@ -116,16 +118,17 @@ func (s *UserService) Profile(ctx context.Context, req *pb.ProfileRequest) (*pb.
 }
 func (s *UserService) UpdateUniqueId(ctx context.Context, req *pb.UniqueIdRequest) (*pb.UniqueIdReply, error) {
 	//检查权限
-	field := "unique_id"
-	account := req.GetUniqueId()
-	have, err := s.UC.AuthCheckUser(ctx, field, account)
-	if err != nil {
-		return nil, UniqueError(err)
+	{
+		field := "unique_id"
+		account := req.GetUniqueId()
+		have, err := s.UC.AuthCheckUser(ctx, field, account)
+		if err != nil {
+			return nil, UniqueError(err)
+		}
+		if !have {
+			return nil, UserNotAccountPermissionError
+		}
 	}
-	if !have {
-		return nil, UserNotAccountPermissionError
-	}
-
 	//2. 每天只能修改一次
 	//3. 验证 合法 和有无重复的
 	updateResult, err := s.UC.UpdateUniqueId(ctx, &biz.UniqueIdReq{
@@ -139,8 +142,36 @@ func (s *UserService) UpdateUniqueId(ctx context.Context, req *pb.UniqueIdReques
 	return &pb.UniqueIdReply{NewUniqueId: updateResult.NewUniqueId, Msg: updateResult.Msg}, nil
 }
 func (s *UserService) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb.GetProfileReply, error) {
+	//检查权限
+	{
+		field := "unique_id"
+		account := req.GetUniqueId()
+		have, err := s.UC.AuthCheckUser(ctx, field, account)
+		if err != nil {
+			return nil, ProfileError(err)
+		}
+		if !have {
+			return nil, UserNotAccountPermissionError
+		}
+	}
+	//获取信息
+
 	return &pb.GetProfileReply{}, nil
 }
 func (s *UserService) UpdatePassword(ctx context.Context, req *pb.UpdatePasswordRequest) (*pb.UpdatePasswordReply, error) {
+	//检查权限
+	{
+		field := "unique_id"
+		account := req.GetUniqueId()
+		have, err := s.UC.AuthCheckUser(ctx, field, account)
+		if err != nil {
+			return nil, PasswordError(err)
+		}
+		if !have {
+			return nil, UserNotAccountPermissionError
+		}
+	}
+	//改密码
+
 	return &pb.UpdatePasswordReply{}, nil
 }
