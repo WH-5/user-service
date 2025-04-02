@@ -9,9 +9,11 @@ server:
 data:
   database:
     driver: postgres
-    source: postgres://root:whwhwhwhwhwhwhwh12321wh@localhost:5432/user_service?sslmode=disable&TimeZone=Asia/Shanghai
+    source: postgres://root:whwhwhwhwhwhwhwh12321wh@database:5432/user_service?sslmode=disable&TimeZone=Asia/Shanghai
+#    source: ${DATABASE_DSN}
   redis:
-    addr: 127.0.0.1:6379
+#    addr: ${REDIS_ADDR}
+    addr: redis:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
     db: 0
@@ -28,5 +30,3 @@ bizfig:
   JWT_SERVICE_KEY: test
   default_unique_length: 6 #默认生成的唯一标识长度
   JWT_EXPIRED_HOUR: 72 #账号token过期的时间，单位小时
-
-

@@ -2,16 +2,15 @@ package data
 
 import (
 	"github.com/WH-5/user-service/internal/conf"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redis/redis/v8"
+	"github.com/google/wire"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
-	"github.com/go-kratos/kratos/v2/log"
-	"github.com/google/wire"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewGreeterRepo, NewUserRepo)
+var ProviderSet = wire.NewSet(NewData, NewUserRepo)
 
 // Data .
 type Data struct {
@@ -28,6 +27,7 @@ type Other struct {
 
 // NewData .
 func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
+	//time.Sleep(10 * time.Minute)
 	// 不做其他数据库的适配了，只做pgsql
 	db, err := gorm.Open(postgres.Open(c.Database.Source), &gorm.Config{})
 	if err != nil {

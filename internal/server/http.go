@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	v1 "github.com/WH-5/user-service/api/helloworld/v1"
+
 	v2 "github.com/WH-5/user-service/api/user/v1"
 	"github.com/WH-5/user-service/internal/conf"
 	"github.com/WH-5/user-service/internal/middleware"
@@ -17,7 +17,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, userService *service.UserService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, userService *service.UserService, logger log.Logger) *http.Server {
 	opts := []http.ServerOption{
 		http.Middleware(
 			selector.Server(
@@ -44,7 +44,6 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, userService 
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	v1.RegisterGreeterHTTPServer(srv, greeter)
 	v2.RegisterUserHTTPServer(srv, userService)
 	return srv
 }

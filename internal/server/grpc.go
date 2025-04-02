@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	v1 "github.com/WH-5/user-service/api/helloworld/v1"
+
 	v2 "github.com/WH-5/user-service/api/user/v1"
 	"github.com/WH-5/user-service/internal/conf"
 	"github.com/WH-5/user-service/internal/middleware"
@@ -19,7 +19,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, greeter *service.GreeterService, userService *service.UserService, logger log.Logger) *grpc.Server {
+func NewGRPCServer(c *conf.Server, userService *service.UserService, logger log.Logger) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(selector.Server(
 			middleware.AuthCheckExist(userService),
@@ -44,7 +44,6 @@ func NewGRPCServer(c *conf.Server, greeter *service.GreeterService, userService 
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	v1.RegisterGreeterServer(srv, greeter)
 	v2.RegisterUserServer(srv, userService)
 	return srv
 }

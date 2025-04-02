@@ -32,6 +32,9 @@ var (
 )
 
 func getConfigPath() string {
+	//if _, err := os.Stat("/app/configs"); err == nil {
+	//	return "/app/configs" // 适用于 Docker 容器
+	//}
 	if _, err := os.Stat("../../configs"); err == nil {
 		return "../../configs" // 适用于 kratos run
 	}
