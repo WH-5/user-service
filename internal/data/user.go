@@ -7,6 +7,7 @@
 // UNU:限制每天修改唯一标识(uniqueId)-不储存次数 uniqueUserId
 // PU:限制段时间多长修改密码-不储存次数 passwordUserId
 // PW:因输错次数太多限制修改密码passwordWrongUserId
+// S{userID}  s后接userid 值为session
 package data
 
 import (
@@ -25,6 +26,15 @@ import (
 type userRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (u *userRepo) SaveSession(ctx context.Context, userId uint, session string, hour int32) error {
+	h := time.Duration(hour) * time.Hour
+	err := u.data.setKey(fmt.Sprintf("S%d", userId), session, h)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *userRepo) ModifyPassword(ctx context.Context, userId uint, newHashPassword string) error {
@@ -161,6 +171,23 @@ func (u *userRepo) CheckUser(ctx context.Context, field, account string) (bool, 
 	userId, err := u.FindUserId(field, account)
 	if err != nil {
 		return false, err
+	}
+
+	sv, err := u.data.getValue(fmt.Sprintf("S%d", uint(uid)))
+	if err != nil {
+		return false, err
+	}
+	if sv == "" {
+		return false, errors.New("not logged in")
+	}
+	sessionValue := ctx.Value("session")
+	session, ok := sessionValue.(string)
+	if !ok {
+		return false, errors.New("invalid or missing session in context")
+	}
+	if session != sv {
+		//在其他地方登录了
+		return false, errors.New("logged in another")
 	}
 	if userId == uint(uid) {
 		return true, nil

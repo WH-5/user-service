@@ -95,6 +95,7 @@ type UserRepo interface {
 	RecordPasswordFailure(ctx context.Context, uniqueId string) error
 	CheckPasswordByUserId(ctx context.Context, uniqueId string) error
 	FindUserId(field, account string) (uint, error)
+	SaveSession(ctx context.Context, userId uint, session string, hour int32) error
 }
 type UserUsecase struct {
 	repo UserRepo
@@ -210,7 +211,11 @@ func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, e
 
 	duration := time.Duration(uc.CF.JWT_EXPIRED_HOUR) * time.Hour
 	//生成jwt token
-	token, err := pkg.GenJwtToken(userId, duration, uc.CF.JWT_SECRET_KEY)
+	session, token, err := pkg.GenJwtToken(userId, duration, uc.CF.JWT_SECRET_KEY)
+	if err != nil {
+		return nil, err
+	}
+	err = uc.repo.SaveSession(ctx, userId, session, uc.CF.JWT_EXPIRED_HOUR)
 	if err != nil {
 		return nil, err
 	}

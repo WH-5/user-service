@@ -8,25 +8,30 @@ package pkg
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"time"
 )
 
 // 定义密钥（用于 HMAC 签名）
 
 // GenJwtToken 生成 JWT
-func GenJwtToken(userID uint, duration time.Duration, key string) (string, error) {
+func GenJwtToken(userID uint, duration time.Duration, key string) (string, string, error) {
 	secretKey := []byte(key)
 	// 创建 payload
+	session := uuid.NewString()
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"exp":     time.Now().Add(duration).Unix(), // 过期时间
-		"iat":     time.Now().Unix(),               // 签发时间
+		"session": session,
+		"iat":     time.Now().Unix(), // 签发时间
 	}
 
 	// 使用 HS256 生成 Token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	//签名
-	return token.SignedString(secretKey)
+	signedString, err := token.SignedString(secretKey)
+
+	return session, signedString, err
 }
 
 // ParseToken 解析 JWT，并检查是否过期，同时返回可读的过期时间

@@ -47,8 +47,10 @@ func AuthCheckExist(userService *service.UserService) middleware.Middleware {
 				}
 				//把用户ID和token放入上下文
 				uid := claims["user_id"]
+				session := claims["session"]
 				//有个坑，从claims里读到的int类型，会转变为float64类型
 				ctx = context.WithValue(ctx, "user_id", uid)
+				ctx = context.WithValue(ctx, "session", session)
 				ctx = context.WithValue(ctx, "token", token)
 
 			}
