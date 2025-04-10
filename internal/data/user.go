@@ -28,6 +28,7 @@ type userRepo struct {
 	log  *log.Helper
 }
 
+// SaveSession 将用户 session 存入缓存
 func (u *userRepo) SaveSession(ctx context.Context, userId uint, session string, hour int32) error {
 	h := time.Duration(hour) * time.Hour
 	err := u.data.setKey(fmt.Sprintf("S%d", userId), session, h)
@@ -37,6 +38,7 @@ func (u *userRepo) SaveSession(ctx context.Context, userId uint, session string,
 	return nil
 }
 
+// ModifyPassword 修改用户密码并记录限制信息到缓存
 func (u *userRepo) ModifyPassword(ctx context.Context, userId uint, newHashPassword string) error {
 	//保存密码
 	result := u.data.DB.Model(&UserAccount{}).Where("id = ?", userId).Update("password_hash", newHashPassword)
@@ -53,6 +55,7 @@ func (u *userRepo) ModifyPassword(ctx context.Context, userId uint, newHashPassw
 	return nil
 }
 
+// GetProfileByUniqueId 通过唯一 ID 获取用户资料
 func (u *userRepo) GetProfileByUniqueId(ctx context.Context, uniqueId string) (*biz.UProfile, error) {
 	var userProfile UserProfile
 	uid, err := u.FindUserId("unique_id", uniqueId)
@@ -73,6 +76,7 @@ func (u *userRepo) GetProfileByUniqueId(ctx context.Context, uniqueId string) (*
 	}, nil
 }
 
+// GetPhoneByUniqueId 通过唯一 ID 获取用户手机号
 func (u *userRepo) GetPhoneByUniqueId(ctx context.Context, uniqueId string) (string, error) {
 	var userAcc UserAccount
 	err := u.data.DB.Model(&UserAccount{}).Where("unique_id = ?", uniqueId).First(&userAcc).Error
@@ -82,6 +86,7 @@ func (u *userRepo) GetPhoneByUniqueId(ctx context.Context, uniqueId string) (str
 	return userAcc.Phone, nil
 }
 
+// RecordModifyUniqueIdOnRedis 记录唯一 ID 修改行为到缓存
 func (u *userRepo) RecordModifyUniqueIdOnRedis(ctx context.Context, uid string) error {
 
 	//存到缓存
@@ -98,7 +103,7 @@ func (u *userRepo) RecordModifyUniqueIdOnRedis(ctx context.Context, uid string) 
 	return nil
 }
 
-// CheckUniqueUpdate true为这个id可以更新
+// CheckUniqueUpdate 检查唯一 ID 当天是否已修改
 func (u *userRepo) CheckUniqueUpdate(ctx context.Context, uniqueId string) (uint, error) {
 	//根据userid检查今天更新情况 没错就是能用
 
@@ -120,7 +125,7 @@ func (u *userRepo) CheckUniqueUpdate(ctx context.Context, uniqueId string) (uint
 	return userId, nil
 }
 
-// CheckUniqueValid true为这个id可以用
+// CheckUniqueValid 检查唯一 ID 是否合法且未注册
 func (u *userRepo) CheckUniqueValid(ctx context.Context, uniqueId string) (bool, error) {
 	//检查uniqueId格式 (3月30日更新了接口参数校验，基本不用校验了)
 	valid := pkg.CheckUniqueIdIsValid(uniqueId)
@@ -136,6 +141,7 @@ func (u *userRepo) CheckUniqueValid(ctx context.Context, uniqueId string) (bool,
 	return !exist, nil
 }
 
+// UpdateUniqueId 更新用户的唯一 ID
 func (u *userRepo) UpdateUniqueId(ctx context.Context, uniqueId, newUniqueId string) error {
 
 	//修改数据库的unique ID
@@ -149,6 +155,7 @@ func (u *userRepo) UpdateUniqueId(ctx context.Context, uniqueId, newUniqueId str
 	return nil
 }
 
+// UpdateProfile 根据唯一 ID 更新用户资料
 func (u *userRepo) UpdateProfile(ctx context.Context, uniqueId string, profileMap map[string]any) error {
 
 	userId, err := u.FindUserId("unique_id", uniqueId)
@@ -162,6 +169,7 @@ func (u *userRepo) UpdateProfile(ctx context.Context, uniqueId string, profileMa
 	return nil
 }
 
+// CheckUser 校验当前用户是否是账号所有者
 func (u *userRepo) CheckUser(ctx context.Context, field, account string) (bool, error) {
 	uidValue := ctx.Value("user_id")
 	uid, ok := uidValue.(float64)
@@ -195,6 +203,7 @@ func (u *userRepo) CheckUser(ctx context.Context, field, account string) (bool, 
 	return false, nil
 }
 
+// VerifyUserAuth 校验账号和密码是否正确
 func (u *userRepo) VerifyUserAuth(ctx context.Context, field, account, password string) (bool, uint, error) {
 	//验证账号密码是否正确,如果正确，返回用户id
 	//false:没匹配上
@@ -215,6 +224,7 @@ func (u *userRepo) VerifyUserAuth(ctx context.Context, field, account, password 
 	return true, userId, nil
 }
 
+// CanLogin 判断用户是否可以登录
 func (u *userRepo) CanLogin(ctx context.Context, field, account string) (bool, int, error) {
 	//检查是否允许登录 到缓存里查这个
 	userId, err := u.FindUserId(field, account)
@@ -240,6 +250,8 @@ func (u *userRepo) CanLogin(ctx context.Context, field, account string) (bool, i
 	t := int(math.Ceil(ttl.Minutes()))
 	return false, t, nil
 }
+
+// FindUserId 通过字段和值查找用户 ID
 func (u *userRepo) FindUserId(field, account string) (uint, error) {
 	//如果没找到，直接返回账号不存在
 	var userId uint
@@ -254,6 +266,7 @@ func (u *userRepo) FindUserId(field, account string) (uint, error) {
 	return userId, nil
 }
 
+// RecordLoginFailure 记录用户登录失败次数
 func (u *userRepo) RecordLoginFailure(ctx context.Context, field, account string) (bool, error) {
 	//记录登录失败 存到数据库和缓存 连续失败x次，限制登录x分钟
 	userId, err := u.FindUserId(field, account)
@@ -282,6 +295,8 @@ func (u *userRepo) RecordLoginFailure(ctx context.Context, field, account string
 	}
 	return true, nil
 }
+
+// RecordPasswordFailure 记录用户密码修改失败次数
 func (u *userRepo) RecordPasswordFailure(ctx context.Context, uniqueId string) error {
 	//记录改密码输入失败 存到缓存 连续失败x次，限制登录x分钟
 	userId, err := u.FindUserId("unique_id", uniqueId)
@@ -306,6 +321,8 @@ func (u *userRepo) RecordPasswordFailure(ctx context.Context, uniqueId string) e
 	}
 	return nil
 }
+
+// CheckPhone 检查手机号是否已注册
 func (u *userRepo) CheckPhone(ctx context.Context, phone string) (bool, error) {
 	//查这个手机号是否注册过，是就返回true
 	var count int64
@@ -316,6 +333,7 @@ func (u *userRepo) CheckPhone(ctx context.Context, phone string) (bool, error) {
 	return count > 0, nil
 }
 
+// CheckDeviceId 检查设备注册次数是否超限
 func (u *userRepo) CheckDeviceId(ctx context.Context, deviceId string) (bool, error) {
 	//到缓存中查找这个device id，键值对：<D:device id,times> <string,int>
 	v, err := u.data.getValue("D:" + deviceId)
@@ -335,7 +353,7 @@ func (u *userRepo) CheckDeviceId(ctx context.Context, deviceId string) (bool, er
 	return true, nil
 }
 
-// CheckPasswordByUserId 通过userId检查密码是否可以更改
+// CheckPasswordByUserId 检查用户是否允许修改密码
 func (u *userRepo) CheckPasswordByUserId(ctx context.Context, uniqueId string) error {
 	//获取userId
 	userId, err := u.FindUserId("unique_id", uniqueId)
@@ -371,6 +389,7 @@ func (u *userRepo) CheckPasswordByUserId(ctx context.Context, uniqueId string) e
 	return nil
 }
 
+// SaveAccount 保存新用户账号信息并初始化缓存及用户资料
 func (u *userRepo) SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, deviceId string) error {
 	// 存入数据库，并且在缓存中留下注册记录
 	ua := &UserAccount{
@@ -416,6 +435,7 @@ func (u *userRepo) SaveAccount(ctx context.Context, phone, uniqueId, hashPwd, de
 	return nil
 }
 
+// WriteLog 写入用户行为日志
 func (u *userRepo) WriteLog(ctx context.Context, userId uint, action string, meta []byte) {
 	userBehavior := &UserBehaviorLog{
 		UserID:   userId,
@@ -428,6 +448,7 @@ func (u *userRepo) WriteLog(ctx context.Context, userId uint, action string, met
 	}
 }
 
+// NewUserRepo 创建一个新的 UserRepo 实例
 func NewUserRepo(data *Data, logger log.Logger) biz.UserRepo {
 	return &userRepo{data: data, log: log.NewHelper(logger)}
 }

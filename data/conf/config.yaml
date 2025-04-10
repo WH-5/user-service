@@ -8,17 +8,19 @@ server:
     timeout: 1s
   name: "user-service"
   version: "1.0"
+  registry:   #这个在容器里的时候要加上
+    consul: consul:8500
 
 data:
   database:
     driver: postgres
-    source: postgres://root:whwhwhwhwhwhwhwh12321wh@localhost:5432/user_service?sslmode=disable&TimeZone=Asia/Shanghai
-#    source: postgres://root:whwhwhwhwhwhwhwh12321wh@database:5432/user_service?sslmode=disable&TimeZone=Asia/Shanghai
-#    source: ${DATABASE_DSN}
+#    source: postgres://root:whwhwhwhwhwhwhwh12321wh@localhost:5432/user_service?sslmode=disable&TimeZone=Asia/Shanghai
+    source: postgres://root:whwhwhwhwhwhwhwh12321wh@database:5432/user_service?sslmode=disable&TimeZone=Asia/Shanghai
+  #    source: ${DATABASE_DSN}
   redis:
-#    addr: ${REDIS_ADDR}
-    addr: localhost:6379
-#    addr: redis:6379
+    #    addr: ${REDIS_ADDR}
+#    addr: localhost:6379
+    addr: redis:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
     db: 0

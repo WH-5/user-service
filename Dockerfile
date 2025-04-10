@@ -17,7 +17,7 @@ RUN apt-get update && \
 
 COPY --from=builder /src/bin /app
 
-COPY configs /app/configs
+COPY data/conf /app/configs
 
 WORKDIR /app
 

@@ -24,7 +24,6 @@ func NewUserService(uc *biz.UserUsecase) *UserService {
 }
 
 // Register 注册
-
 func (s *UserService) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterReply, error) {
 	//必须要传入设备号
 	if req.DeviceId == "" {
@@ -143,18 +142,19 @@ func (s *UserService) UpdateUniqueId(ctx context.Context, req *pb.UniqueIdReques
 	return &pb.UniqueIdReply{NewUniqueId: updateResult.NewUniqueId, Msg: updateResult.Msg}, nil
 }
 func (s *UserService) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb.GetProfileReply, error) {
-	//检查权限
-	{
-		field := "unique_id"
-		account := req.GetUniqueId()
-		have, err := s.UC.AuthCheckUser(ctx, field, account)
-		if err != nil {
-			return nil, ProfileError(err)
-		}
-		if !have {
-			return nil, UserNotAccountPermissionError
-		}
-	}
+	//检查权限   （不检查权限了，但是中间件还是会检查token）
+	//{
+	//	field := "unique_id"
+	//	account := req.GetUniqueId()
+	//	have, err := s.UC.AuthCheckUser(ctx, field, account)
+	//	if err != nil {
+	//		return nil, ProfileError(err)
+	//	}
+	//	if !have {
+	//		return nil, UserNotAccountPermissionError
+	//	}
+	//}
+
 	//获取信息
 	prof, err := s.UC.GetProfile(ctx, &biz.GetProfileReq{UniqueId: req.GetUniqueId()})
 	if err != nil {
@@ -202,4 +202,11 @@ func (s *UserService) UpdatePassword(ctx context.Context, req *pb.UpdatePassword
 		return nil, PasswordError(err)
 	}
 	return &pb.UpdatePasswordReply{UniqueId: password.UniqueId, Msg: password.Msg}, nil
+}
+func (s *UserService) GetIdByUnique(ctx context.Context, req *pb.GetIdByUniqueRequest) (*pb.GetIdByUniqueReply, error) {
+	userId, err := s.UC.GetIdByUnique(ctx, req.GetUniqueId())
+	if err != nil {
+		return nil, InternalError(err)
+	}
+	return &pb.GetIdByUniqueReply{UserId: uint64(userId)}, nil
 }

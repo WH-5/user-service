@@ -10,6 +10,7 @@ option java_multiple_files = true;
 option java_package = "api.user.v1";
 
 service User {
+
 	rpc Register (RegisterRequest) returns (RegisterReply){
 		option (google.api.http) = {
 			post: "/user/register"
@@ -45,6 +46,14 @@ service User {
 			body: "*"
 		};
 	}
+	//	新增一个接口，输入uniqueId，返回userId，只限于服务间调用
+	rpc GetIdByUnique(GetIdByUniqueRequest)returns(GetIdByUniqueReply){}
+}
+message GetIdByUniqueRequest{
+	string unique_id=1 [(validate.rules).string = {min_len: 1, max_len: 20, pattern: "^[a-zA-Z0-9_-]{1,20}$"}];
+}
+message GetIdByUniqueReply{
+	uint64 user_id=1;
 }
 message UpdatePasswordRequest{
 	string unique_id=1 [(validate.rules).string = {min_len: 1, max_len: 20, pattern: "^[a-zA-Z0-9_-]{1,20}$"}];

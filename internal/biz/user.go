@@ -106,6 +106,8 @@ type UserUsecase struct {
 func NewUserUsecase(c *conf.Bizfig, repo UserRepo, logger log.Logger) *UserUsecase {
 	return &UserUsecase{repo: repo, log: log.NewHelper(logger), CF: c}
 }
+
+// Register 实现用户注册功能，包括设备注册限制、手机号校验、密码校验、唯一ID生成、密码加密及账号信息保存，同时异步记录注册日志。
 func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*RegisterReply, error) {
 	//1. 设备注册限制 每天每设备注册x个  repo到缓存中查询设备今天是否可以注册了
 	can, err := uc.repo.CheckDeviceId(ctx, req.DeviceId)
@@ -173,6 +175,8 @@ func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*Registe
 		Msg:      "register successfully",
 	}, nil
 }
+
+// Login 实现用户登录功能，支持手机号或唯一ID登录，包括登录限制检测、密码验证、JWT生成与保存、失败记录与日志记录。
 func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, error) {
 	var field, value string
 
@@ -225,6 +229,8 @@ func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, e
 	go uc.repo.WriteLog(ctx, userId, "login", meta)
 	return &LoginReply{Token: token, Msg: "Login successfully", Field: field, Value: value}, nil
 }
+
+// Profile 实现用户资料更新功能，支持昵称、性别、简介等字段的修改，自动构建变更记录并异步写入日志。
 func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileReply, error) {
 	var msg string
 	//1. 输入唯一id
@@ -272,6 +278,8 @@ func (uc *UserUsecase) Profile(ctx context.Context, req *ProfileReq) (*ProfileRe
 	//msg[:len(msg)-1]去除最后一个逗号
 	return &ProfileReply{UniqueId: req.UniqueId, Msg: msg[:len(msg)-1]}, nil
 }
+
+// UpdateUniqueId 实现唯一ID更新功能，检查每日修改限制和新ID合法性，成功后更新数据库与缓存，并记录修改日志.
 func (uc *UserUsecase) UpdateUniqueId(ctx context.Context, req *UniqueIdReq) (*UniqueIdReply, error) {
 	//判断今天修改过没有
 	uid, err := uc.repo.CheckUniqueUpdate(ctx, req.UniqueId)
@@ -304,6 +312,8 @@ func (uc *UserUsecase) UpdateUniqueId(ctx context.Context, req *UniqueIdReq) (*U
 	go uc.repo.WriteLog(ctx, uid, "unique", meta)
 	return &UniqueIdReply{NewUniqueId: req.NewUniqueId, Msg: m}, nil
 }
+
+// GetProfile 获取用户资料信息，先获取手机号确认存在用户，然后返回对应的用户Profile数据。
 func (uc *UserUsecase) GetProfile(ctx context.Context, req *GetProfileReq) (*GetProfileReply, error) {
 	phone, err := uc.repo.GetPhoneByUniqueId(ctx, req.UniqueId)
 	if err != nil {
@@ -317,6 +327,8 @@ func (uc *UserUsecase) GetProfile(ctx context.Context, req *GetProfileReq) (*Get
 	}
 	return &GetProfileReply{UProfile: profileByUniqueId, Phone: phone}, nil
 }
+
+// Password 修改用户密码，包含当前密码校验、新密码加密保存及相关失败记录，并异步记录日志。
 func (uc *UserUsecase) Password(ctx context.Context, req *PasswordReq) (*PasswordReply, error) {
 	//检查现在能不能改密码(有限制，在规定的分钟里只能改一次，还有连续x分钟输错y次要限制x分钟，在config.yaml文件中配置)
 	//判断在函数里做了，只需要看有没有err
@@ -353,7 +365,16 @@ func (uc *UserUsecase) Password(ctx context.Context, req *PasswordReq) (*Passwor
 	}, nil
 }
 
-// AuthCheckUser 验证token是否具有操作请求的账号的权限
+// GetIdByUnique 获取用户id
+func (uc *UserUsecase) GetIdByUnique(ctx context.Context, unique string) (uint, error) {
+	userId, err := uc.repo.FindUserId("unique_id", unique)
+	if err != nil {
+		return 0, err
+	}
+	return userId, nil
+}
+
+// AuthCheckUser 检查当前用户是否具备访问指定账号的权限，用于鉴权逻辑校验。
 func (uc *UserUsecase) AuthCheckUser(ctx context.Context, field, account string) (bool, error) {
 	if field == "" || account == "" {
 		return false, errors.New("field or account is empty")

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
 	"os"
 	"time"
 
@@ -15,6 +16,9 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
+
+	//consul "github.com/go-kratos/kratos/contrib/registrar/consul/v2"
+	"github.com/hashicorp/consul/api"
 
 	_ "go.uber.org/automaxprocs"
 )
@@ -52,9 +56,21 @@ func init() {
 	time.Local = loc
 }
 
-func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
+func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, server *conf.Server) *kratos.App {
+	Name = server.Name
+	Version = server.Version
+	cg := api.DefaultConfig()
+	cg.Address = server.Registry.GetConsul()
+	// new consul client
+	client, err := api.NewClient(cg)
+	if err != nil {
+		panic(err)
+	}
+	// new reg with consul client
+	reg := consul.New(client)
+
 	return kratos.New(
-		kratos.ID(id),
+		kratos.ID(id+"-"+server.GetName()),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{}),
@@ -63,6 +79,7 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
 			gs,
 			hs,
 		),
+		kratos.Registrar(reg),
 	)
 }
 

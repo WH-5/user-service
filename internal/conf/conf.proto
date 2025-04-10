@@ -9,8 +9,11 @@ message Bootstrap {
   Server server = 1;
   Data data = 2;
   Bizfig bizfig=3;
+  Registry registry=4;
 }
-
+message Registry {
+  string consul = 1;
+}
 message Server {
   message HTTP {
     string network = 1;
@@ -24,7 +27,9 @@ message Server {
   }
   HTTP http = 1;
   GRPC grpc = 2;
-
+  string name=3;
+  string version=4;
+  Registry registry=5;
 }
 
 message Data {
