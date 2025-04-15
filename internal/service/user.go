@@ -1,7 +1,7 @@
 // Package service user.go
 // Author: 王辉
 // Created: 2025-03-29 23:38
-//这个文件是user的接口层  函数返回错误必须返回我封装过的错误📦
+//user的接口层  函数返回错误必须返回我封装过的错误📦
 
 package service
 
