@@ -74,6 +74,10 @@ type PasswordReply struct {
 	UniqueId string `json:"unique_id"`
 	Msg      string `json:"msg"`
 }
+type UserInfo struct {
+	UniqueId string `json:"unique_id"`
+	Id       uint   `json:"id"`
+}
 
 type UserRepo interface {
 	CheckPhone(ctx context.Context, phone string) (bool, error)
@@ -96,6 +100,7 @@ type UserRepo interface {
 	CheckPasswordByUserId(ctx context.Context, uniqueId string) error
 	FindUserId(field, account string) (uint, error)
 	SaveSession(ctx context.Context, userId uint, session string, hour int32) error
+	GetUniqueByIdMany(ctx context.Context, userId uint64) (UserInfo, error)
 }
 type UserUsecase struct {
 	repo UserRepo
@@ -372,6 +377,13 @@ func (uc *UserUsecase) GetIdByUnique(ctx context.Context, unique string) (uint, 
 		return 0, err
 	}
 	return userId, nil
+}
+func (uc *UserUsecase) GetUniqueByIdMany(ctx context.Context, uids uint64) (UserInfo, error) {
+	id, err := uc.repo.GetUniqueByIdMany(ctx, uids)
+	if err != nil {
+		return UserInfo{}, err
+	}
+	return id, nil
 }
 
 // AuthCheckUser 检查当前用户是否具备访问指定账号的权限，用于鉴权逻辑校验。

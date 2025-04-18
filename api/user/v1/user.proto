@@ -47,8 +47,17 @@ service User {
 		};
 	}
 	//	新增一个接口，输入uniqueId，返回userId，只限于服务间调用
-	rpc GetIdByUnique(GetIdByUniqueRequest)returns(GetIdByUniqueReply){}
+	rpc GetIdByUnique(GetIdByUniqueRequest)returns(GetIdByUniqueReply);
+	rpc GetUniqueByIdMany(GetUniqueByIdManyRequest)returns(GetUniqueByIdManyReply);
 }
+message GetUniqueByIdManyRequest{
+	uint64 user_id=1;
+}
+message GetUniqueByIdManyReply{
+	string unique_id=1;
+	uint64 user_id=2;
+}
+
 message GetIdByUniqueRequest{
 	string unique_id=1 [(validate.rules).string = {min_len: 1, max_len: 20, pattern: "^[a-zA-Z0-9_-]{1,20}$"}];
 }

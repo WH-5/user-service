@@ -210,3 +210,10 @@ func (s *UserService) GetIdByUnique(ctx context.Context, req *pb.GetIdByUniqueRe
 	}
 	return &pb.GetIdByUniqueReply{UserId: uint64(userId)}, nil
 }
+func (s *UserService) GetUniqueByIdMany(ctx context.Context, req *pb.GetUniqueByIdManyRequest) (*pb.GetUniqueByIdManyReply, error) {
+	unique, err := s.UC.GetUniqueByIdMany(ctx, req.GetUserId())
+	if err != nil {
+		return nil, InternalError(err)
+	}
+	return &pb.GetUniqueByIdManyReply{UniqueId: unique.UniqueId, UserId: uint64(unique.Id)}, nil
+}

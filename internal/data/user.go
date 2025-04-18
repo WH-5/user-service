@@ -8,6 +8,7 @@
 // PU:限制段时间多长修改密码-不储存次数 passwordUserId
 // PW:因输错次数太多限制修改密码passwordWrongUserId
 // S{userID}  s后接userid 值为session
+// O{userID}  o后接userid 值的类型为list，内容为因不在线而没有收到的消息 (push服务存入的数据)
 package data
 
 import (
@@ -26,6 +27,15 @@ import (
 type userRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (u *userRepo) GetUniqueByIdMany(ctx context.Context, userId uint64) (biz.UserInfo, error) {
+	var unique biz.UserInfo
+	err := u.data.DB.Model(&UserAccount{}).Where("id = ?", userId).Select("unique_id", "id").Scan(&unique).Error
+	if err != nil {
+		return biz.UserInfo{}, err
+	}
+	return unique, nil
 }
 
 // SaveSession 将用户 session 存入缓存

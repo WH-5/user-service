@@ -19,13 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	User_Register_FullMethodName       = "/api.user.v1.User/Register"
-	User_Login_FullMethodName          = "/api.user.v1.User/Login"
-	User_Profile_FullMethodName        = "/api.user.v1.User/Profile"
-	User_UpdateUniqueId_FullMethodName = "/api.user.v1.User/UpdateUniqueId"
-	User_GetProfile_FullMethodName     = "/api.user.v1.User/GetProfile"
-	User_UpdatePassword_FullMethodName = "/api.user.v1.User/UpdatePassword"
-	User_GetIdByUnique_FullMethodName  = "/api.user.v1.User/GetIdByUnique"
+	User_Register_FullMethodName          = "/api.user.v1.User/Register"
+	User_Login_FullMethodName             = "/api.user.v1.User/Login"
+	User_Profile_FullMethodName           = "/api.user.v1.User/Profile"
+	User_UpdateUniqueId_FullMethodName    = "/api.user.v1.User/UpdateUniqueId"
+	User_GetProfile_FullMethodName        = "/api.user.v1.User/GetProfile"
+	User_UpdatePassword_FullMethodName    = "/api.user.v1.User/UpdatePassword"
+	User_GetIdByUnique_FullMethodName     = "/api.user.v1.User/GetIdByUnique"
+	User_GetUniqueByIdMany_FullMethodName = "/api.user.v1.User/GetUniqueByIdMany"
 )
 
 // UserClient is the client API for User service.
@@ -40,6 +41,7 @@ type UserClient interface {
 	UpdatePassword(ctx context.Context, in *UpdatePasswordRequest, opts ...grpc.CallOption) (*UpdatePasswordReply, error)
 	// 新增一个接口，输入uniqueId，返回userId，只限于服务间调用
 	GetIdByUnique(ctx context.Context, in *GetIdByUniqueRequest, opts ...grpc.CallOption) (*GetIdByUniqueReply, error)
+	GetUniqueByIdMany(ctx context.Context, in *GetUniqueByIdManyRequest, opts ...grpc.CallOption) (*GetUniqueByIdManyReply, error)
 }
 
 type userClient struct {
@@ -120,6 +122,16 @@ func (c *userClient) GetIdByUnique(ctx context.Context, in *GetIdByUniqueRequest
 	return out, nil
 }
 
+func (c *userClient) GetUniqueByIdMany(ctx context.Context, in *GetUniqueByIdManyRequest, opts ...grpc.CallOption) (*GetUniqueByIdManyReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUniqueByIdManyReply)
+	err := c.cc.Invoke(ctx, User_GetUniqueByIdMany_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility.
@@ -132,6 +144,7 @@ type UserServer interface {
 	UpdatePassword(context.Context, *UpdatePasswordRequest) (*UpdatePasswordReply, error)
 	// 新增一个接口，输入uniqueId，返回userId，只限于服务间调用
 	GetIdByUnique(context.Context, *GetIdByUniqueRequest) (*GetIdByUniqueReply, error)
+	GetUniqueByIdMany(context.Context, *GetUniqueByIdManyRequest) (*GetUniqueByIdManyReply, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -162,6 +175,9 @@ func (UnimplementedUserServer) UpdatePassword(context.Context, *UpdatePasswordRe
 }
 func (UnimplementedUserServer) GetIdByUnique(context.Context, *GetIdByUniqueRequest) (*GetIdByUniqueReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIdByUnique not implemented")
+}
+func (UnimplementedUserServer) GetUniqueByIdMany(context.Context, *GetUniqueByIdManyRequest) (*GetUniqueByIdManyReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUniqueByIdMany not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 func (UnimplementedUserServer) testEmbeddedByValue()              {}
@@ -310,6 +326,24 @@ func _User_GetIdByUnique_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_GetUniqueByIdMany_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUniqueByIdManyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).GetUniqueByIdMany(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_GetUniqueByIdMany_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).GetUniqueByIdMany(ctx, req.(*GetUniqueByIdManyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -344,6 +378,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetIdByUnique",
 			Handler:    _User_GetIdByUnique_Handler,
+		},
+		{
+			MethodName: "GetUniqueByIdMany",
+			Handler:    _User_GetUniqueByIdMany_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

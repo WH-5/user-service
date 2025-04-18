@@ -35,6 +35,216 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on GetUniqueByIdManyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetUniqueByIdManyRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUniqueByIdManyRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetUniqueByIdManyRequestMultiError, or nil if none found.
+func (m *GetUniqueByIdManyRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUniqueByIdManyRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UserId
+
+	if len(errors) > 0 {
+		return GetUniqueByIdManyRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetUniqueByIdManyRequestMultiError is an error wrapping multiple validation
+// errors returned by GetUniqueByIdManyRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetUniqueByIdManyRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUniqueByIdManyRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUniqueByIdManyRequestMultiError) AllErrors() []error { return m }
+
+// GetUniqueByIdManyRequestValidationError is the validation error returned by
+// GetUniqueByIdManyRequest.Validate if the designated constraints aren't met.
+type GetUniqueByIdManyRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUniqueByIdManyRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUniqueByIdManyRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUniqueByIdManyRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUniqueByIdManyRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUniqueByIdManyRequestValidationError) ErrorName() string {
+	return "GetUniqueByIdManyRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUniqueByIdManyRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUniqueByIdManyRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUniqueByIdManyRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUniqueByIdManyRequestValidationError{}
+
+// Validate checks the field values on GetUniqueByIdManyReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetUniqueByIdManyReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetUniqueByIdManyReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetUniqueByIdManyReplyMultiError, or nil if none found.
+func (m *GetUniqueByIdManyReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetUniqueByIdManyReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UniqueId
+
+	// no validation rules for UserId
+
+	if len(errors) > 0 {
+		return GetUniqueByIdManyReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetUniqueByIdManyReplyMultiError is an error wrapping multiple validation
+// errors returned by GetUniqueByIdManyReply.ValidateAll() if the designated
+// constraints aren't met.
+type GetUniqueByIdManyReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetUniqueByIdManyReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetUniqueByIdManyReplyMultiError) AllErrors() []error { return m }
+
+// GetUniqueByIdManyReplyValidationError is the validation error returned by
+// GetUniqueByIdManyReply.Validate if the designated constraints aren't met.
+type GetUniqueByIdManyReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetUniqueByIdManyReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetUniqueByIdManyReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetUniqueByIdManyReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetUniqueByIdManyReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetUniqueByIdManyReplyValidationError) ErrorName() string {
+	return "GetUniqueByIdManyReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetUniqueByIdManyReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetUniqueByIdManyReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetUniqueByIdManyReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetUniqueByIdManyReplyValidationError{}
+
 // Validate checks the field values on GetIdByUniqueRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

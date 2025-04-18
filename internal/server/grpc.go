@@ -24,7 +24,7 @@ func NewGRPCServer(c *conf.Server, userService *service.UserService, logger log.
 		grpc.Middleware(selector.Server(
 			middleware.AuthCheckExist(userService),
 		).Match(func(ctx context.Context, operation string) bool {
-			if strings.HasSuffix(operation, "User/Login") || strings.HasSuffix(operation, "User/Register") || strings.HasSuffix(operation, "User/GetIdByUnique") {
+			if strings.HasSuffix(operation, "User/Login") || strings.HasSuffix(operation, "User/Register") || strings.HasSuffix(operation, "User/GetUniqueByIdMany") || strings.HasSuffix(operation, "User/GetIdByUnique") {
 				return false
 			}
 			return true
