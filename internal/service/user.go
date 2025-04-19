@@ -142,7 +142,7 @@ func (s *UserService) UpdateUniqueId(ctx context.Context, req *pb.UniqueIdReques
 	return &pb.UniqueIdReply{NewUniqueId: updateResult.NewUniqueId, Msg: updateResult.Msg}, nil
 }
 func (s *UserService) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb.GetProfileReply, error) {
-	//检查权限   （不检查权限了，但是中间件还是会检查token）
+	//检查权限   （不检查权限了，但是中间件还是会检查token）grpc端不检查token，其他服务调用
 	//{
 	//	field := "unique_id"
 	//	account := req.GetUniqueId()
