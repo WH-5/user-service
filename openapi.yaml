@@ -116,6 +116,15 @@ paths:
                                 $ref: '#/components/schemas/api.user.v1.UniqueIdReply'
 components:
     schemas:
+        api.user.v1.EncryptionInfo:
+            type: object
+            properties:
+                kdfSalt:
+                    type: string
+                publicKey:
+                    type: string
+                encryptedPrivateKey:
+                    type: string
         api.user.v1.GetProfileReply:
             type: object
             properties:
@@ -136,6 +145,8 @@ components:
                     type: string
                 value:
                     type: string
+                encryption:
+                    $ref: '#/components/schemas/api.user.v1.EncryptionInfo'
         api.user.v1.LoginRequest:
             type: object
             properties:
@@ -175,6 +186,8 @@ components:
                     type: string
                 deviceId:
                     type: string
+                encryption:
+                    $ref: '#/components/schemas/api.user.v1.EncryptionInfo'
         api.user.v1.UniqueIdReply:
             type: object
             properties:

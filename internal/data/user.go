@@ -15,6 +15,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	v1 "github.com/WH-5/user-service/api/user/v1"
 	"github.com/WH-5/user-service/internal/biz"
 	"github.com/WH-5/user-service/internal/pkg"
 	"github.com/go-kratos/kratos/v2/log"
@@ -27,6 +28,35 @@ import (
 type userRepo struct {
 	data *Data
 	log  *log.Helper
+}
+
+func (u *userRepo) SetEncrypt(ctx context.Context, userId uint, encrypt *v1.EncryptionInfo) error {
+
+	uce := &UserChatEncryption{
+		UserID:              userId,
+		KdfSalt:             encrypt.KdfSalt,
+		PublicKey:           encrypt.PublicKey,
+		EncryptedPrivateKey: encrypt.EncryptedPrivateKey,
+	}
+	err := u.data.DB.Create(uce).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userRepo) GetEncrypt(ctx context.Context, userId uint) (*v1.EncryptionInfo, error) {
+
+	uce := &UserChatEncryption{}
+	err := u.data.DB.Where("user_id = ?", userId).First(&uce).Error
+	if err != nil {
+		return nil, err
+	}
+	return &v1.EncryptionInfo{
+		KdfSalt:             uce.KdfSalt,
+		PublicKey:           uce.PublicKey,
+		EncryptedPrivateKey: uce.EncryptedPrivateKey,
+	}, nil
 }
 
 func (u *userRepo) GetUniqueByIdMany(ctx context.Context, userId uint64) (biz.UserInfo, error) {

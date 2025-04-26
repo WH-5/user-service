@@ -39,7 +39,7 @@ func (s *UserService) Register(ctx context.Context, req *pb.RegisterRequest) (*p
 	//4. 设备注册限制 每天每设备注册x个
 	//5. 记录注册日志
 	//这些都放在业务逻辑层
-	registerReply, err := s.UC.Register(ctx, &biz.RegisterReq{Phone: req.Phone, Password: req.Password, DeviceId: req.DeviceId})
+	registerReply, err := s.UC.Register(ctx, &biz.RegisterReq{Phone: req.Phone, Password: req.Password, DeviceId: req.DeviceId, Encryption: req.Encryption})
 	//意外退出的错误处理，逻辑判断的错误放在msg里了
 	if err != nil {
 		return nil, RegisterError(err)
@@ -66,7 +66,7 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	//3. 生成jwt token
 	//4. 连续失败x次，限制登录x分钟
 	//5. 记录登录日志
-	return &pb.LoginReply{Token: login.Token, Msg: login.Msg, Field: login.Field, Value: login.Value}, nil
+	return &pb.LoginReply{Token: login.Token, Msg: login.Msg, Field: login.Field, Value: login.Value, Encryption: login.Encryption}, nil
 }
 func (s *UserService) Profile(ctx context.Context, req *pb.ProfileRequest) (*pb.ProfileReply, error) {
 	//检查权限

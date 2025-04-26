@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	pb "github.com/WH-5/user-service/api/user/v1"
 	"github.com/WH-5/user-service/internal/conf"
 	"github.com/WH-5/user-service/internal/pkg"
 	"github.com/go-kratos/kratos/v2/log"
@@ -14,9 +15,10 @@ import (
 )
 
 type RegisterReq struct {
-	Phone    string `json:"phone"`
-	Password string `json:"password"`
-	DeviceId string `json:"device_id"`
+	Phone      string             `json:"phone"`
+	Password   string             `json:"password"`
+	DeviceId   string             `json:"device_id"`
+	Encryption *pb.EncryptionInfo `json:"encryption"`
 }
 type LoginReq struct {
 	Phone    string `json:"phone"`
@@ -36,6 +38,9 @@ type UProfile struct {
 	Other    string `json:"other"`    //网站
 }
 
+// type EncryptionInfo struct {
+//
+// }
 type UniqueIdReq struct {
 	UniqueId    string `json:"unique_id"`
 	NewUniqueId string `json:"new_unique_id"`
@@ -45,10 +50,11 @@ type RegisterReply struct {
 	UniqueId string `json:"unique_id"`
 }
 type LoginReply struct {
-	Token string `json:"token"`
-	Msg   string `json:"msg"`
-	Field string `json:"field"`
-	Value string `json:"value"`
+	Token      string             `json:"token"`
+	Msg        string             `json:"msg"`
+	Field      string             `json:"field"`
+	Value      string             `json:"value"`
+	Encryption *pb.EncryptionInfo `json:"encryption"`
 }
 type ProfileReply struct {
 	UniqueId string `json:"unique_id"`
@@ -101,6 +107,8 @@ type UserRepo interface {
 	FindUserId(field, account string) (uint, error)
 	SaveSession(ctx context.Context, userId uint, session string, hour int32) error
 	GetUniqueByIdMany(ctx context.Context, userId uint64) (UserInfo, error)
+	SetEncrypt(ctx context.Context, userId uint, encrypt *pb.EncryptionInfo) error
+	GetEncrypt(ctx context.Context, userId uint) (*pb.EncryptionInfo, error)
 }
 type UserUsecase struct {
 	repo UserRepo
@@ -160,6 +168,7 @@ func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*Registe
 		fmt.Println("Error during registration:", err)
 		return nil, err
 	}
+
 	//6. 记录注册日志 repo到数据库记录
 
 	uc.log.WithContext(ctx).Infof("Register: %v", req.Phone)
@@ -174,6 +183,11 @@ func (uc *UserUsecase) Register(ctx context.Context, req *RegisterReq) (*Registe
 	}
 	//不是核心逻辑，异步写入
 	go uc.repo.WriteLog(ctx, userId, "register", meta)
+
+	err = uc.repo.SetEncrypt(ctx, userId, req.Encryption)
+	if err != nil {
+		return nil, err
+	}
 
 	return &RegisterReply{
 		UniqueId: uniqueId,
@@ -228,11 +242,17 @@ func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, e
 	if err != nil {
 		return nil, err
 	}
+	//获取加密信息
+	encrypt, err := uc.repo.GetEncrypt(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
 	//记录登录日志
 	uc.log.WithContext(ctx).Infof("Login: %v[%v]", field, value)
 	meta, err := json.Marshal(req)
 	go uc.repo.WriteLog(ctx, userId, "login", meta)
-	return &LoginReply{Token: token, Msg: "Login successfully", Field: field, Value: value}, nil
+
+	return &LoginReply{Token: token, Msg: "Login successfully", Field: field, Value: value, Encryption: encrypt}, nil
 }
 
 // Profile 实现用户资料更新功能，支持昵称、性别、简介等字段的修改，自动构建变更记录并异步写入日志。

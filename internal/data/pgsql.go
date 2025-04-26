@@ -50,10 +50,18 @@ type UserBehaviorLog struct {
 	Metadata json.RawMessage `gorm:"type:jsonb"`        // 行为的相关数据 0注册、1登录、2其他
 }
 
+type UserChatEncryption struct {
+	gorm.Model
+	UserID              uint   `gorm:"not null"`
+	KdfSalt             string `gorm:"size:256;not null" json:"kdf_salt"`               // Base64 编码的 salt
+	PublicKey           string `gorm:"size:1024;not null" json:"public_key"`            // Base64 编码的公钥
+	EncryptedPrivateKey string `gorm:"size:2048;not null" json:"encrypted_private_key"` // Base64 编码的加密私钥
+}
+
 // MigrateDB 负责数据库迁移
 func MigrateDB(db *gorm.DB) error {
 	// 执行自动迁移
-	err := db.AutoMigrate(&UserAccount{}, &UserProfile{}, &UserBehaviorLog{})
+	err := db.AutoMigrate(&UserAccount{}, &UserProfile{}, &UserBehaviorLog{}, &UserChatEncryption{})
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
