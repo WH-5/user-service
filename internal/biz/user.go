@@ -51,9 +51,8 @@ type RegisterReply struct {
 }
 type LoginReply struct {
 	Token      string             `json:"token"`
-	Msg        string             `json:"msg"`
-	Field      string             `json:"field"`
-	Value      string             `json:"value"`
+	Phone      string             `json:"phone"`
+	Unique     string             `json:"unique"`
 	Encryption *pb.EncryptionInfo `json:"encryption"`
 }
 type ProfileReply struct {
@@ -109,6 +108,7 @@ type UserRepo interface {
 	GetUniqueByIdMany(ctx context.Context, userId uint64) (UserInfo, error)
 	SetEncrypt(ctx context.Context, userId uint, encrypt *pb.EncryptionInfo) error
 	GetEncrypt(ctx context.Context, userId uint) (*pb.EncryptionInfo, error)
+	GetUniqueAndPhone(ctx context.Context, field, account string) (string, string, error)
 }
 type UserUsecase struct {
 	repo UserRepo
@@ -247,12 +247,16 @@ func (uc *UserUsecase) Login(ctx context.Context, req *LoginReq) (*LoginReply, e
 	if err != nil {
 		return nil, err
 	}
+	unique, phone, err := uc.repo.GetUniqueAndPhone(ctx, field, value)
+	if err != nil {
+		return nil, err
+	}
 	//记录登录日志
 	uc.log.WithContext(ctx).Infof("Login: %v[%v]", field, value)
 	meta, err := json.Marshal(req)
 	go uc.repo.WriteLog(ctx, userId, "login", meta)
 
-	return &LoginReply{Token: token, Msg: "Login successfully", Field: field, Value: value, Encryption: encrypt}, nil
+	return &LoginReply{Token: token, Phone: phone, Unique: unique, Encryption: encrypt}, nil
 }
 
 // Profile 实现用户资料更新功能，支持昵称、性别、简介等字段的修改，自动构建变更记录并异步写入日志。

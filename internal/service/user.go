@@ -66,7 +66,7 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	//3. 生成jwt token
 	//4. 连续失败x次，限制登录x分钟
 	//5. 记录登录日志
-	return &pb.LoginReply{Token: login.Token, Msg: login.Msg, Field: login.Field, Value: login.Value, Encryption: login.Encryption}, nil
+	return &pb.LoginReply{Token: login.Token, Phone: login.Phone, UniqueId: login.Unique, Encryption: login.Encryption}, nil
 }
 func (s *UserService) Profile(ctx context.Context, req *pb.ProfileRequest) (*pb.ProfileReply, error) {
 	//检查权限

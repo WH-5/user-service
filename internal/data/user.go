@@ -30,6 +30,30 @@ type userRepo struct {
 	log  *log.Helper
 }
 
+func (u *userRepo) GetUniqueAndPhone(ctx context.Context, field, account string) (string, string, error) {
+	userId, err := u.FindUserId(field, account)
+	if err != nil {
+		return "", "", err
+	}
+	type Man struct {
+		phone    string
+		uniqueId string
+	}
+	man := &Man{}
+	// 使用 Scan 来将查询结果存到变量中
+	err = u.data.DB.Model(&UserAccount{}).Where("id = ?", userId).
+		Select("phone", "unique_id").Scan(&man).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", "", fmt.Errorf("user with ID %d not found", userId)
+		}
+		return "", "", err
+	}
+
+	return man.uniqueId, man.phone, nil
+
+}
+
 func (u *userRepo) SetEncrypt(ctx context.Context, userId uint, encrypt *v1.EncryptionInfo) error {
 
 	uce := &UserChatEncryption{

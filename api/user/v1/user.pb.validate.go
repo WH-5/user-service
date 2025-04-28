@@ -1499,11 +1499,9 @@ func (m *LoginReply) validate(all bool) error {
 
 	// no validation rules for Token
 
-	// no validation rules for Msg
+	// no validation rules for UniqueId
 
-	// no validation rules for Field
-
-	// no validation rules for Value
+	// no validation rules for Phone
 
 	if all {
 		switch v := interface{}(m.GetEncryption()).(type) {

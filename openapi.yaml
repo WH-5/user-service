@@ -139,11 +139,9 @@ components:
             properties:
                 token:
                     type: string
-                msg:
+                uniqueId:
                     type: string
-                field:
-                    type: string
-                value:
+                phone:
                     type: string
                 encryption:
                     $ref: '#/components/schemas/api.user.v1.EncryptionInfo'

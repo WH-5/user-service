@@ -103,10 +103,9 @@ message LoginRequest{
 }
 message LoginReply{
 	string token=2;
-	string msg=1;
-	string field=3;
-	string value=4;
-	EncryptionInfo encryption=5;
+	string unique_id=1;
+	string phone=3;
+	EncryptionInfo encryption=4;
 }
 
 message UserProfile {
