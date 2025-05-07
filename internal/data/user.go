@@ -31,27 +31,35 @@ type userRepo struct {
 }
 
 func (u *userRepo) GetUniqueAndPhone(ctx context.Context, field, account string) (string, string, error) {
+	// 获取用户ID
 	userId, err := u.FindUserId(field, account)
 	if err != nil {
 		return "", "", err
 	}
+
+	// 定义结构体，用来存储查询结果
 	type Man struct {
-		phone    string
-		uniqueId string
+		Phone    string `gorm:"column:phone"`     // 显式指定数据库列名
+		UniqueId string `gorm:"column:unique_id"` // 显式指定数据库列名
 	}
 	man := &Man{}
-	// 使用 Scan 来将查询结果存到变量中
-	err = u.data.DB.Model(&UserAccount{}).Where("id = ?", userId).
-		Select("phone", "unique_id").Scan(&man).Error
+
+	// 查询 phone 和 unique_id 字段
+	err = u.data.DB.Model(&UserAccount{}).
+		Where("id = ?", userId).
+		Select("phone", "unique_id").
+		Scan(man).Error // 使用 Scan 将查询结果存到结构体指针
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 如果记录没有找到，返回特定的错误
 			return "", "", fmt.Errorf("user with ID %d not found", userId)
 		}
+		// 处理其他类型的错误
 		return "", "", err
 	}
 
-	return man.uniqueId, man.phone, nil
-
+	// 返回查询到的 uniqueId 和 phone
+	return man.UniqueId, man.Phone, nil
 }
 
 func (u *userRepo) SetEncrypt(ctx context.Context, userId uint, encrypt *v1.EncryptionInfo) error {
