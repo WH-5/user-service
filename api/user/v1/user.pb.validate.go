@@ -35,6 +35,214 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on GetPublicKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetPublicKeyRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetPublicKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetPublicKeyRequestMultiError, or nil if none found.
+func (m *GetPublicKeyRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetPublicKeyRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UserId
+
+	if len(errors) > 0 {
+		return GetPublicKeyRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetPublicKeyRequestMultiError is an error wrapping multiple validation
+// errors returned by GetPublicKeyRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetPublicKeyRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetPublicKeyRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetPublicKeyRequestMultiError) AllErrors() []error { return m }
+
+// GetPublicKeyRequestValidationError is the validation error returned by
+// GetPublicKeyRequest.Validate if the designated constraints aren't met.
+type GetPublicKeyRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetPublicKeyRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetPublicKeyRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetPublicKeyRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetPublicKeyRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetPublicKeyRequestValidationError) ErrorName() string {
+	return "GetPublicKeyRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetPublicKeyRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetPublicKeyRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetPublicKeyRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetPublicKeyRequestValidationError{}
+
+// Validate checks the field values on GetPublicKeyReply with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetPublicKeyReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetPublicKeyReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetPublicKeyReplyMultiError, or nil if none found.
+func (m *GetPublicKeyReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetPublicKeyReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for PublicKey
+
+	if len(errors) > 0 {
+		return GetPublicKeyReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetPublicKeyReplyMultiError is an error wrapping multiple validation errors
+// returned by GetPublicKeyReply.ValidateAll() if the designated constraints
+// aren't met.
+type GetPublicKeyReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetPublicKeyReplyMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetPublicKeyReplyMultiError) AllErrors() []error { return m }
+
+// GetPublicKeyReplyValidationError is the validation error returned by
+// GetPublicKeyReply.Validate if the designated constraints aren't met.
+type GetPublicKeyReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetPublicKeyReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetPublicKeyReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetPublicKeyReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetPublicKeyReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetPublicKeyReplyValidationError) ErrorName() string {
+	return "GetPublicKeyReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetPublicKeyReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetPublicKeyReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetPublicKeyReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetPublicKeyReplyValidationError{}
+
 // Validate checks the field values on GetUniqueByIdManyRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

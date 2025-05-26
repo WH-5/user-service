@@ -46,9 +46,17 @@ service User {
 			body: "*"
 		};
 	}
+
 	//	新增一个接口，输入uniqueId，返回userId，只限于服务间调用
 	rpc GetIdByUnique(GetIdByUniqueRequest)returns(GetIdByUniqueReply);
 	rpc GetUniqueByIdMany(GetUniqueByIdManyRequest)returns(GetUniqueByIdManyReply);
+	rpc GetPublicKey (GetPublicKeyRequest) returns  (GetPublicKeyReply);
+}
+message GetPublicKeyRequest{
+	uint64 user_id=1;
+}
+message GetPublicKeyReply{
+	string public_key=1;
 }
 message GetUniqueByIdManyRequest{
 	uint64 user_id=1;

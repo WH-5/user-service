@@ -109,6 +109,7 @@ type UserRepo interface {
 	SetEncrypt(ctx context.Context, userId uint, encrypt *pb.EncryptionInfo) error
 	GetEncrypt(ctx context.Context, userId uint) (*pb.EncryptionInfo, error)
 	GetUniqueAndPhone(ctx context.Context, field, account string) (string, string, error)
+	GetPublicKeyByUserId(ctx context.Context, userId uint) (string, error)
 }
 type UserUsecase struct {
 	repo UserRepo
@@ -408,6 +409,14 @@ func (uc *UserUsecase) GetUniqueByIdMany(ctx context.Context, uids uint64) (User
 		return UserInfo{}, err
 	}
 	return id, nil
+}
+
+func (uc *UserUsecase) GetPublic(ctx context.Context, uid uint64) (string, error) {
+	pub, err := uc.repo.GetPublicKeyByUserId(ctx, uint(uid))
+	if err != nil {
+		return "", err
+	}
+	return pub, nil
 }
 
 // AuthCheckUser 检查当前用户是否具备访问指定账号的权限，用于鉴权逻辑校验。

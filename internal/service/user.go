@@ -203,6 +203,8 @@ func (s *UserService) UpdatePassword(ctx context.Context, req *pb.UpdatePassword
 	}
 	return &pb.UpdatePasswordReply{UniqueId: password.UniqueId, Msg: password.Msg}, nil
 }
+
+// GetIdByUnique 通过unique获取id
 func (s *UserService) GetIdByUnique(ctx context.Context, req *pb.GetIdByUniqueRequest) (*pb.GetIdByUniqueReply, error) {
 	userId, err := s.UC.GetIdByUnique(ctx, req.GetUniqueId())
 	if err != nil {
@@ -210,10 +212,23 @@ func (s *UserService) GetIdByUnique(ctx context.Context, req *pb.GetIdByUniqueRe
 	}
 	return &pb.GetIdByUniqueReply{UserId: uint64(userId)}, nil
 }
+
+// GetUniqueByIdMany 通过id获取unique
 func (s *UserService) GetUniqueByIdMany(ctx context.Context, req *pb.GetUniqueByIdManyRequest) (*pb.GetUniqueByIdManyReply, error) {
 	unique, err := s.UC.GetUniqueByIdMany(ctx, req.GetUserId())
 	if err != nil {
 		return nil, InternalError(err)
 	}
 	return &pb.GetUniqueByIdManyReply{UniqueId: unique.UniqueId, UserId: uint64(unique.Id)}, nil
+}
+
+// GetUniqueByIdMany 获取公钥
+func (s *UserService) GetPublicKey(ctx context.Context, req *pb.GetPublicKeyRequest) (*pb.GetPublicKeyReply, error) {
+	public, err := s.UC.GetPublic(ctx, req.GetUserId())
+	if err != nil {
+		return nil, InternalError(err)
+	}
+	return &pb.GetPublicKeyReply{
+		PublicKey: public,
+	}, nil
 }

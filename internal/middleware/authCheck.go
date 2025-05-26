@@ -22,14 +22,12 @@ func AuthCheckExist(userService *service.UserService) middleware.Middleware {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (reply interface{}, err error) {
 			log.Println("auth middleware in", req)
-
 			// 从上下文中获取请求头
 			if tr, ok := transport.FromServerContext(ctx); ok {
 				authHeader := tr.RequestHeader().Get("Authorization")
 				if authHeader == "" {
 					return nil, fmt.Errorf("missing authorization header")
 				}
-
 				// 解析 Bearer Token
 				tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 				token, err := pkg.ParseToken(tokenString, userService.UC.CF.JWT_SECRET_KEY)
@@ -52,9 +50,7 @@ func AuthCheckExist(userService *service.UserService) middleware.Middleware {
 				ctx = context.WithValue(ctx, "user_id", uid)
 				ctx = context.WithValue(ctx, "session", session)
 				ctx = context.WithValue(ctx, "token", token)
-
 			}
-
 			// 调用下一个处理程序
 			reply, err = handler(ctx, req)
 			//fmt.Println("auth middleware out", reply)

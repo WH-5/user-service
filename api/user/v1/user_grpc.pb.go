@@ -27,6 +27,7 @@ const (
 	User_UpdatePassword_FullMethodName    = "/api.user.v1.User/UpdatePassword"
 	User_GetIdByUnique_FullMethodName     = "/api.user.v1.User/GetIdByUnique"
 	User_GetUniqueByIdMany_FullMethodName = "/api.user.v1.User/GetUniqueByIdMany"
+	User_GetPublicKey_FullMethodName      = "/api.user.v1.User/GetPublicKey"
 )
 
 // UserClient is the client API for User service.
@@ -42,6 +43,7 @@ type UserClient interface {
 	// 新增一个接口，输入uniqueId，返回userId，只限于服务间调用
 	GetIdByUnique(ctx context.Context, in *GetIdByUniqueRequest, opts ...grpc.CallOption) (*GetIdByUniqueReply, error)
 	GetUniqueByIdMany(ctx context.Context, in *GetUniqueByIdManyRequest, opts ...grpc.CallOption) (*GetUniqueByIdManyReply, error)
+	GetPublicKey(ctx context.Context, in *GetPublicKeyRequest, opts ...grpc.CallOption) (*GetPublicKeyReply, error)
 }
 
 type userClient struct {
@@ -132,6 +134,16 @@ func (c *userClient) GetUniqueByIdMany(ctx context.Context, in *GetUniqueByIdMan
 	return out, nil
 }
 
+func (c *userClient) GetPublicKey(ctx context.Context, in *GetPublicKeyRequest, opts ...grpc.CallOption) (*GetPublicKeyReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPublicKeyReply)
+	err := c.cc.Invoke(ctx, User_GetPublicKey_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility.
@@ -145,6 +157,7 @@ type UserServer interface {
 	// 新增一个接口，输入uniqueId，返回userId，只限于服务间调用
 	GetIdByUnique(context.Context, *GetIdByUniqueRequest) (*GetIdByUniqueReply, error)
 	GetUniqueByIdMany(context.Context, *GetUniqueByIdManyRequest) (*GetUniqueByIdManyReply, error)
+	GetPublicKey(context.Context, *GetPublicKeyRequest) (*GetPublicKeyReply, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -178,6 +191,9 @@ func (UnimplementedUserServer) GetIdByUnique(context.Context, *GetIdByUniqueRequ
 }
 func (UnimplementedUserServer) GetUniqueByIdMany(context.Context, *GetUniqueByIdManyRequest) (*GetUniqueByIdManyReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUniqueByIdMany not implemented")
+}
+func (UnimplementedUserServer) GetPublicKey(context.Context, *GetPublicKeyRequest) (*GetPublicKeyReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPublicKey not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 func (UnimplementedUserServer) testEmbeddedByValue()              {}
@@ -344,6 +360,24 @@ func _User_GetUniqueByIdMany_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_GetPublicKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPublicKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).GetPublicKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_GetPublicKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).GetPublicKey(ctx, req.(*GetPublicKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -382,6 +416,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUniqueByIdMany",
 			Handler:    _User_GetUniqueByIdMany_Handler,
+		},
+		{
+			MethodName: "GetPublicKey",
+			Handler:    _User_GetPublicKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

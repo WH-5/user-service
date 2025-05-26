@@ -30,6 +30,15 @@ type userRepo struct {
 	log  *log.Helper
 }
 
+func (u *userRepo) GetPublicKeyByUserId(ctx context.Context, userId uint) (string, error) {
+	man := &UserChatEncryption{}
+	err := u.data.DB.Model(&UserChatEncryption{}).Where("user_id = ?", userId).First(man).Error
+	if err != nil {
+		return "", err
+	}
+	return man.PublicKey, err
+}
+
 func (u *userRepo) GetUniqueAndPhone(ctx context.Context, field, account string) (string, string, error) {
 	// 获取用户ID
 	userId, err := u.FindUserId(field, account)

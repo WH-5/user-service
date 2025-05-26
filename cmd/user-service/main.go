@@ -60,13 +60,13 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, server *conf.Se
 	Name = server.Name
 	Version = server.Version
 	cg := api.DefaultConfig()
-	cg.Address = server.Registry.GetConsul()
-	// new consul client
+	cg.Address = server.Registry.GetConsul() //从配置文件读配置
+	// 新建client
 	client, err := api.NewClient(cg)
 	if err != nil {
 		panic(err)
 	}
-	// new reg with consul client
+	// 新建reg用于注册服务
 	reg := consul.New(client)
 
 	return kratos.New(
@@ -79,7 +79,7 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, server *conf.Se
 			gs,
 			hs,
 		),
-		kratos.Registrar(reg),
+		kratos.Registrar(reg), //注册到consul
 	)
 }
 

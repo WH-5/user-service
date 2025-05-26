@@ -23,15 +23,15 @@ func NewHTTPServer(c *conf.Server, userService *service.UserService, logger log.
 			selector.Server(
 				middleware.AuthCheckExist(userService),
 			).Match(func(ctx context.Context, operation string) bool {
-
+				//自定义鉴权白名单函数
 				if strings.HasSuffix(operation, "User/Login") || strings.HasSuffix(operation, "User/Register") {
 					return false
 				}
 				return true
 			}).Build(),
-			recovery.Recovery(),
-			logging.Server(logger),
-			validate.Validator(),
+			recovery.Recovery(),    //恢复
+			logging.Server(logger), //日志
+			validate.Validator(),   //参数校验
 		),
 	}
 	if c.Http.Network != "" {
