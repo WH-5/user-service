@@ -222,7 +222,7 @@ func (s *UserService) GetUniqueByIdMany(ctx context.Context, req *pb.GetUniqueBy
 	return &pb.GetUniqueByIdManyReply{UniqueId: unique.UniqueId, UserId: uint64(unique.Id)}, nil
 }
 
-// GetUniqueByIdMany 获取公钥
+// GetPublicKey 获取公钥
 func (s *UserService) GetPublicKey(ctx context.Context, req *pb.GetPublicKeyRequest) (*pb.GetPublicKeyReply, error) {
 	public, err := s.UC.GetPublic(ctx, req.GetUserId())
 	if err != nil {

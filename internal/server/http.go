@@ -24,7 +24,7 @@ func NewHTTPServer(c *conf.Server, userService *service.UserService, logger log.
 				middleware.AuthCheckExist(userService),
 			).Match(func(ctx context.Context, operation string) bool {
 				//自定义鉴权白名单函数
-				if strings.HasSuffix(operation, "User/Login") || strings.HasSuffix(operation, "User/Register") {
+				if strings.HasSuffix(operation, "User/Login") || strings.HasSuffix(operation, "User/Register") || strings.HasSuffix(operation, "User/GetIdByUnique") || strings.HasSuffix(operation, "User/GetProfile") {
 					return false
 				}
 				return true
